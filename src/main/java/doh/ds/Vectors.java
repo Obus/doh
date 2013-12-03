@@ -12,21 +12,9 @@ import java.util.List;
  * In-hdfs abstraction for vectors
  */
 public class Vectors extends DataSet {
-    private final Path path;
-
-    public long size() {
-        return 0;
+    protected Vectors(Path path, long size) {
+        super(path, size);
     }
 
-    public void write(Path path) {
-        return;
-    }
 
-    public List<Vector> read() {
-        return null;
-    }
-
-    public Vectors(Path path) {
-        this.path = path;
-    }
 }
