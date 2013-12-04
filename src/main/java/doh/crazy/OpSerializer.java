@@ -18,19 +18,46 @@ import java.util.List;
  */
 public class OpSerializer {
 
-    public static <T extends Op> T makeMapOp(Configuration conf, Class<T> opClass) throws Exception {
-        T op = opClass.newInstance();
+    public static <T extends MapOp> T loadMapOpFromConf(Configuration conf) throws Exception {
+        String opClassStr = conf.get("tmp.op.map");
+        Class opClass = Class.forName(opClassStr);
+        T op = (T) opClass.newInstance();
+        loadOpFieldsFromConf(conf, op);
+        return op;
+    }
+
+    public static <T extends MapOp> void saveMapOpToConf(Configuration conf, T op) throws Exception {
+        conf.set("tmp.op.map", op.getClass().getName());
+        saveOpFieldsToConf(conf, op);
+    }
+
+    public static <T extends Op> T loadOpFieldsFromConf(Configuration conf, T op) throws Exception {
+        Class opClass = op.getClass();
         List<Field> opParameters = opParameters(opClass.getDeclaredFields());
         for (Field f : opParameters) {
-            setFieldFromConf(conf, op, f);
+            loadFieldFromConf(conf, op, f);
         }
         return op;
     }
 
-    public static <T> T setFieldFromConf(Configuration conf, T op, Field f) throws Exception {
-        Object value = load(conf, parameterName(op, f), fieldClass(f));
+    public static <T extends Op> T saveOpFieldsToConf(Configuration conf, T op) throws Exception {
+        Class opClass = op.getClass();
+        List<Field> opParameters = opParameters(opClass.getDeclaredFields());
+        for (Field f : opParameters) {
+            saveFieldToConf(conf, op, f);
+        }
+        return op;
+    }
+
+    public static <T> T loadFieldFromConf(Configuration conf, T op, Field f) throws Exception {
+        Object value = load(conf, parameterForOpField(op, f), fieldClass(f));
         setFieldValue(op, f, value);
         return op;
+    }
+
+    public static void saveFieldToConf(Configuration conf, Object op, Field f) throws Exception {
+        Object value = fieldValue(op, f);
+        save(conf, parameterForOpField(op, f), value);
     }
 
     public static Class fieldClass(Field f) {
@@ -38,7 +65,7 @@ public class OpSerializer {
     }
 
     public static List<Field> opParameters(Field[] fields) {
-        List<Field> opParameters = new ArrayList<Field>(5);
+        List<Field> opParameters = new ArrayList<Field>();
         for (Field f : fields) {
             if (isOpParameter(f)) {
                 opParameters.add(f);
@@ -60,8 +87,12 @@ public class OpSerializer {
         return false;
     }
 
-    public static String parameterName(Object op, Field f) {
-        return "tmp." + f.getName();
+    public static String parameterForOpField(Object op, Field f) {
+        return "tmp." + op.getClass().getSimpleName() + "." + f.getName();
+    }
+
+    public static String parameterForOp(Object op) {
+        return "tmp." + op.getClass().getSimpleName();
     }
 
     public static Object fieldValue(Object instance, Field f) throws Exception {
@@ -93,6 +124,7 @@ public class OpSerializer {
         DataOutputBuffer buffer = new DataOutputBuffer();
         value.write(buffer);
         String data = new String(Arrays.trimToCapacity(buffer.getData(), buffer.getLength()), charset);
+        conf.set(paramName, data);
     }
 
     public static Charset charset = Charset.forName("UTF8");

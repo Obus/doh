@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Doubles extends DataSet {
     protected Doubles(Path path, long size) {
-        super(path, size);
+        super(size, path);
     }
 
     public List<Double> read() {
