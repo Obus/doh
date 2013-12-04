@@ -1,15 +1,10 @@
 package doh.ds;
 
-import com.sun.javafx.PlatformUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.mahout.common.HadoopUtil;
 
 import java.util.List;
 
-/**
- * Created by Alexander A. Senov
- * Synqera, 2012.
- */
+
 public abstract class DataSet<ORIGIN> {
     protected final Path path;
     protected final long size;

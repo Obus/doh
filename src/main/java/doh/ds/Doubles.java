@@ -1,12 +1,14 @@
 package doh.ds;
 
+import org.apache.hadoop.fs.Path;
+
 import java.util.List;
 
-/**
- * Created by Alexander A. Senov
- * Synqera, 2012.
- */
+
 public class Doubles extends DataSet {
+    protected Doubles(Path path, long size) {
+        super(path, size);
+    }
 
     public List<Double> read() {
         return null;

@@ -1,15 +1,16 @@
 package doh.crazy;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Writable;
 import org.apache.mahout.math.Arrays;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import sun.nio.cs.
 
 /**
  * Created by Alexander A. Senov
@@ -21,13 +22,19 @@ public class OpSerializer {
         T op = opClass.newInstance();
         List<Field> opParameters = opParameters(opClass.getDeclaredFields());
         for (Field f : opParameters) {
-            setField(op, f);
+            setFieldFromConf(conf, op, f);
         }
         return op;
     }
 
-    public static <T> T setField(Configuration conf, T instance, Field f) {
-        return null;
+    public static <T> T setFieldFromConf(Configuration conf, T op, Field f) throws Exception {
+        Object value = load(conf, parameterName(op, f), fieldClass(f));
+        setFieldValue(op, f, value);
+        return op;
+    }
+
+    public static Class fieldClass(Field f) {
+        return f.getType();
     }
 
     public static List<Field> opParameters(Field[] fields) {
@@ -57,12 +64,7 @@ public class OpSerializer {
         return "tmp." + f.getName();
     }
 
-    public void setFieldValueToConf(Configuration conf, Object op, Field f) {
-        String name = parameterName(op, f);
-
-    }
-
-    public static Object getFieldValue(Object instance, Field f) throws Exception {
+    public static Object fieldValue(Object instance, Field f) throws Exception {
         return f.get(instance);
     }
 
@@ -70,18 +72,28 @@ public class OpSerializer {
         f.set(instance, value);
     }
 
-    public static <T> T load(Configuration conf, String paramName, Class<T> clazz) {
-        return null;
+    public static <T> T load(Configuration conf, String paramName, Class<T> clazz) throws Exception {
+        return loadWritable(conf, paramName, clazz);
     }
 
-    public static <T> void save(Configuration conf, String paramName, T value) {
+    public static <T> T loadWritable(Configuration conf, String paramName, Class<T> clazz) throws Exception {
+        Writable w = (Writable) clazz.newInstance();
+        byte[] data = conf.get(paramName).getBytes(charset);
+        DataInputBuffer buffer = new DataInputBuffer();
+        buffer.reset(data, data.length);
+        w.readFields(buffer);
+        return (T) w;
+    }
 
+    public static <T> void save(Configuration conf, String paramName, T value) throws Exception {
+        saveWritable(conf, paramName, (Writable) value);
     }
 
     public static void saveWritable(Configuration conf, String paramName, Writable value) throws Exception {
         DataOutputBuffer buffer = new DataOutputBuffer();
         value.write(buffer);
-        String data = new String(Arrays.trimToCapacity(buffer.getData(), buffer.getLength()), new US_ASCII());
+        String data = new String(Arrays.trimToCapacity(buffer.getData(), buffer.getLength()), charset);
     }
 
+    public static Charset charset = Charset.forName("UTF8");
 }

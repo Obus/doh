@@ -1,8 +1,10 @@
 package doh.ds;
 
-/**
- * Created by Alexander A. Senov
- * Synqera, 2012.
- */
+
+import org.apache.hadoop.fs.Path;
+
 public class Clusters extends DataSet {
+    protected Clusters(Path path, long size) {
+        super(path, size);
+    }
 }

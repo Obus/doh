@@ -1,17 +1,12 @@
 package doh.op;
 
-import com.synqera.bigkore.rank.JobRunner;
 import doh.NamedFunction;
 import doh.ds.Clusters;
 import doh.ds.Doubles;
 import doh.ds.Vectors;
 
-/**
- * Created by Alexander A. Senov
- * Synqera, 2012.
- */
+
 public class VectorsOps {
-    private JobRunner jobRunner;
 
     public Vectors sample(Vectors vectors, int size) {
         return null;

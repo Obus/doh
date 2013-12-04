@@ -5,10 +5,6 @@ import org.apache.mahout.common.Pair;
 import org.apache.mahout.common.distance.DistanceMeasure;
 import org.apache.mahout.math.Vector;
 
-/**
- * Created by Alexander A. Senov
- * Synqera, 2012.
- */
 public abstract class MapOp<FromKey, FromValue, ToKey, ToValue> implements Op<Pair<FromKey, FromValue>, Pair<ToKey, ToValue>> {
 
     @Override
