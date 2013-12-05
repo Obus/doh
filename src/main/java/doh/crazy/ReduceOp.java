@@ -8,7 +8,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 
-public abstract class ReduceOp <FromKey, FromValue, ToKey, ToValue>  implements Op<Pair<FromKey, Iterable<FromValue>>, Pair<ToKey, ToValue>> {
+public abstract class ReduceOp<FromKey, FromValue, ToKey, ToValue> implements
+        Op<Pair<FromKey, Iterable<FromValue>>, Pair<ToKey, ToValue>>,
+        MapReduceOp<FromKey, FromValue, ToKey, ToValue> {
 
     @Override
     public Pair<ToKey, ToValue> apply(Pair<FromKey, Iterable<FromValue>> f) {
@@ -19,6 +21,27 @@ public abstract class ReduceOp <FromKey, FromValue, ToKey, ToValue>  implements 
 
     public Pair<ToKey, ToValue> pair(ToKey key, ToValue value) {
         return new Pair<ToKey, ToValue>(key, value);
+    }
+
+
+    @Override
+    public Class<FromKey> fromKeyClass() {
+        return ReflectionUtils.getFromKeyClass(getClass());
+    }
+
+    @Override
+    public Class<FromValue> fromValueClass() {
+        return ReflectionUtils.getFromValueClass(getClass());
+    }
+
+    @Override
+    public Class<ToKey> toKeyClass() {
+        return ReflectionUtils.getToKeyClass(getClass());
+    }
+
+    @Override
+    public Class<ToValue> toValueClass() {
+        return ReflectionUtils.getToValueClass(getClass());
     }
 
     public static class ClusterDiameterReduceOp extends ReduceOp<String, Double, WritableComparable, String> {
@@ -44,8 +67,7 @@ public abstract class ReduceOp <FromKey, FromValue, ToKey, ToValue>  implements 
         for (T i : iterable) {
             if (result == null) {
                 result = i;
-            }
-            else {
+            } else {
                 result = result.compareTo(i) > 0 ? result : i;
             }
         }

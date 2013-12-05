@@ -5,7 +5,9 @@ import org.apache.mahout.common.Pair;
 import org.apache.mahout.common.distance.DistanceMeasure;
 import org.apache.mahout.math.Vector;
 
-public abstract class MapOp<FromKey, FromValue, ToKey, ToValue> implements Op<Pair<FromKey, FromValue>, Pair<ToKey, ToValue>> {
+public abstract class MapOp<FromKey, FromValue, ToKey, ToValue> implements
+        Op<Pair<FromKey, FromValue>, Pair<ToKey, ToValue>>,
+        MapReduceOp<FromKey, FromValue, ToKey, ToValue> {
 
     @Override
     public Pair<ToKey, ToValue> apply(Pair<FromKey, FromValue> f) {
@@ -13,6 +15,26 @@ public abstract class MapOp<FromKey, FromValue, ToKey, ToValue> implements Op<Pa
     }
 
     public abstract Pair<ToKey, ToValue> map(FromKey key, FromValue value);
+
+    @Override
+    public Class<FromKey> fromKeyClass() {
+        return ReflectionUtils.getFromKeyClass(getClass());
+    }
+
+    @Override
+    public Class<FromValue> fromValueClass() {
+        return ReflectionUtils.getFromValueClass(getClass());
+    }
+
+    @Override
+    public Class<ToKey> toKeyClass() {
+        return ReflectionUtils.getToKeyClass(getClass());
+    }
+
+    @Override
+    public Class<ToValue> toValueClass() {
+        return ReflectionUtils.getToValueClass(getClass());
+    }
 
     public Pair<ToKey, ToValue> pair(ToKey key, ToValue value) {
         return new Pair<ToKey, ToValue>(key, value);

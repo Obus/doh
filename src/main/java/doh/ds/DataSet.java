@@ -4,6 +4,8 @@ import doh.crazy.MapOp;
 import doh.crazy.Op;
 import doh.crazy.OpSerializer;
 import doh.crazy.ReduceOp;
+import doh.crazy.SimpleOpMapper;
+import doh.crazy.SimpleOpReducer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -53,17 +55,32 @@ public abstract class DataSet<ORIGIN> {
         Path output = from.next();
         OpSerializer.saveOpFieldsToConf(conf, op);
 
+        Job job = new Job(conf, "");
+        FileInputFormat.setInputPaths(job, input);
+        FileOutputFormat.setOutputPath(job, output);
         if (op instanceof MapOp) {
-            Job job = new Job(conf, "Map only job");
-
-
-            FileInputFormat.setInputPaths(job, input);
-            FileOutputFormat.setOutputPath(job, output);
+            MapOp mapOp = (MapOp) op;
+            setUpMapOpJob(job, mapOp);
         } else if (op instanceof ReduceOp) {
-
+            ReduceOp reduceOp = (ReduceOp) op;
+            setUpReduceOpJob(job, reduceOp);
         } else {
             throw new IllegalArgumentException("Unsupported Op type: " + op.getClass());
         }
+    }
+
+    public static void setUpMapOpJob(Job job, MapOp mapOp) throws Exception {
+        OpSerializer.saveMapOpToConf(job.getConfiguration(), mapOp);
+        job.setMapperClass(SimpleOpMapper.class);
+        job.setMapOutputKeyClass(mapOp.toKeyClass());
+        job.setMapOutputValueClass(mapOp.toValueClass());
+    }
+
+    public static void setUpReduceOpJob(Job job, ReduceOp reduceOp) throws Exception {
+        OpSerializer.saveReduceOpToConf(job.getConfiguration(), reduceOp);
+        job.setReducerClass(SimpleOpReducer.class);
+        job.setOutputKeyClass(reduceOp.toKeyClass());
+        job.setOutputValueClass(reduceOp.toValueClass());
     }
 
 

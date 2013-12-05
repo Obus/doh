@@ -26,8 +26,21 @@ public class OpSerializer {
         return op;
     }
 
+    public static <T extends ReduceOp> T loadReduceOpFromConf(Configuration conf) throws Exception {
+        String opClassStr = conf.get("tmp.op.reduce");
+        Class opClass = Class.forName(opClassStr);
+        T op = (T) opClass.newInstance();
+        loadOpFieldsFromConf(conf, op);
+        return op;
+    }
+
     public static <T extends MapOp> void saveMapOpToConf(Configuration conf, T op) throws Exception {
         conf.set("tmp.op.map", op.getClass().getName());
+        saveOpFieldsToConf(conf, op);
+    }
+
+    public static <T extends ReduceOp> void saveReduceOpToConf(Configuration conf, T op) throws Exception {
+        conf.set("tmp.op.redyce", op.getClass().getName());
         saveOpFieldsToConf(conf, op);
     }
 
