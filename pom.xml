@@ -56,6 +56,12 @@
             <version>2.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.jodah</groupId>
+            <artifactId>typetools</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+
 
     </dependencies>
 </project>
