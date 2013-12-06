@@ -12,10 +12,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Alexander A. Senov
- * Synqera, 2012.
- */
 public class OpSerializer {
 
     public static <T extends MapOp> T loadMapOpFromConf(Configuration conf) throws Exception {

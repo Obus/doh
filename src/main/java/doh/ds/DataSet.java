@@ -1,5 +1,6 @@
 package doh.ds;
 
+import doh.crazy.Context;
 import doh.crazy.MapOp;
 import doh.crazy.Op;
 import doh.crazy.OpSerializer;
@@ -16,17 +17,17 @@ import java.util.List;
 
 
 public abstract class DataSet<ORIGIN> {
+    protected final Context context;
     protected final Path path;
     protected final Configuration conf;
 
-    protected DataSet(Configuration conf, Path path) {
+    protected DataSet(Context context, Path path, Configuration conf) {
+        this.context = context;
         this.path = path;
         this.conf = conf;
     }
 
-    public <TORIGIN> DataSet<TORIGIN> apply(Op<ORIGIN, TORIGIN> op) {
-
-    }
+    public abstract <TORIGIN> DataSet<TORIGIN> apply(Op<ORIGIN, TORIGIN> op) throws Exception ;
 
 
     public Path getPath() {
@@ -41,48 +42,8 @@ public abstract class DataSet<ORIGIN> {
         throw new UnsupportedOperationException("Not implemented yet.");
     }
 
-    public void copy(Path to) {
 
+    public Path nextPath() throws Exception {
+        return context.nextTempPath();
     }
-
-    public void move(Path to) {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
-
-    public static <F, T> DataSet<T> applyOperation(DataSet<F> from, Op<F, T> op) throws Exception {
-        Configuration conf = from.getConf();
-        Path input = from.getPath();
-        Path output = from.next();
-        OpSerializer.saveOpFieldsToConf(conf, op);
-
-        Job job = new Job(conf, "");
-        FileInputFormat.setInputPaths(job, input);
-        FileOutputFormat.setOutputPath(job, output);
-        if (op instanceof MapOp) {
-            MapOp mapOp = (MapOp) op;
-            setUpMapOpJob(job, mapOp);
-        } else if (op instanceof ReduceOp) {
-            ReduceOp reduceOp = (ReduceOp) op;
-            setUpReduceOpJob(job, reduceOp);
-        } else {
-            throw new IllegalArgumentException("Unsupported Op type: " + op.getClass());
-        }
-    }
-
-    public static void setUpMapOpJob(Job job, MapOp mapOp) throws Exception {
-        OpSerializer.saveMapOpToConf(job.getConfiguration(), mapOp);
-        job.setMapperClass(SimpleOpMapper.class);
-        job.setMapOutputKeyClass(mapOp.toKeyClass());
-        job.setMapOutputValueClass(mapOp.toValueClass());
-    }
-
-    public static void setUpReduceOpJob(Job job, ReduceOp reduceOp) throws Exception {
-        OpSerializer.saveReduceOpToConf(job.getConfiguration(), reduceOp);
-        job.setReducerClass(SimpleOpReducer.class);
-        job.setOutputKeyClass(reduceOp.toKeyClass());
-        job.setOutputValueClass(reduceOp.toValueClass());
-    }
-
-
-    public abstract Path next();
 }
