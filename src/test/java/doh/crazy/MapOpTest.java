@@ -59,4 +59,9 @@ public class MapOpTest {
         assertEquals(Integer.class , mapOp.toValueClass());
     }
 
+    @Test
+    public void testUnparameterized() throws Exception {
+
+    }
+
 }

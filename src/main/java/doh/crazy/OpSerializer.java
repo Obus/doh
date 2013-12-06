@@ -113,28 +113,23 @@ public class OpSerializer {
     }
 
     public static <T> T load(Configuration conf, String paramName, Class<T> clazz) throws Exception {
-        return loadWritable(conf, paramName, clazz);
+        if (Writable.class.isAssignableFrom(clazz)) {
+            String s = conf.get(paramName);
+            return (T) new OpParameterSerDe.WritableOpParameterSerDe().de(s);
+        }
+        throw new IllegalArgumentException();
     }
 
-    public static <T> T loadWritable(Configuration conf, String paramName, Class<T> clazz) throws Exception {
-        Writable w = (Writable) clazz.newInstance();
-        byte[] data = conf.get(paramName).getBytes(charset);
-        DataInputBuffer buffer = new DataInputBuffer();
-        buffer.reset(data, data.length);
-        w.readFields(buffer);
-        return (T) w;
-    }
 
     public static <T> void save(Configuration conf, String paramName, T value) throws Exception {
-        saveWritable(conf, paramName, (Writable) value);
+        if (Writable.class.isAssignableFrom(value.getClass())) {
+            conf.set(paramName, new OpParameterSerDe.WritableOpParameterSerDe().ser((Writable) value));
+        }
+        throw new IllegalArgumentException();
     }
 
-    public static void saveWritable(Configuration conf, String paramName, Writable value) throws Exception {
-        DataOutputBuffer buffer = new DataOutputBuffer();
-        value.write(buffer);
-        String data = new String(Arrays.trimToCapacity(buffer.getData(), buffer.getLength()), charset);
-        conf.set(paramName, data);
-    }
 
-    public static Charset charset = Charset.forName("UTF8");
+
+
+
 }
