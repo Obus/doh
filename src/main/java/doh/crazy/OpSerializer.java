@@ -1,16 +1,14 @@
 package doh.crazy;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.DataInputBuffer;
-import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Writable;
-import org.apache.mahout.math.Arrays;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+import static doh.crazy.ClassUtils.*;
 
 public class OpSerializer {
 
@@ -42,7 +40,7 @@ public class OpSerializer {
 
     public static <T extends Op> T loadOpFieldsFromConf(Configuration conf, T op) throws Exception {
         Class opClass = op.getClass();
-        List<Field> opParameters = opParameters(opClass.getDeclaredFields());
+        List<Field> opParameters = opParametersAccessible(opClass.getDeclaredFields());
         for (Field f : opParameters) {
             loadFieldFromConf(conf, op, f);
         }
@@ -51,7 +49,7 @@ public class OpSerializer {
 
     public static <T extends Op> T saveOpFieldsToConf(Configuration conf, T op) throws Exception {
         Class opClass = op.getClass();
-        List<Field> opParameters = opParameters(opClass.getDeclaredFields());
+        List<Field> opParameters = opParametersAccessible(opClass.getDeclaredFields());
         for (Field f : opParameters) {
             saveFieldToConf(conf, op, f);
         }
@@ -73,10 +71,11 @@ public class OpSerializer {
         return f.getType();
     }
 
-    public static List<Field> opParameters(Field[] fields) {
+    public static List<Field> opParametersAccessible(Field[] fields) {
         List<Field> opParameters = new ArrayList<Field>();
         for (Field f : fields) {
             if (isOpParameter(f)) {
+                f.setAccessible(true);
                 opParameters.add(f);
             }
         }
@@ -113,19 +112,41 @@ public class OpSerializer {
     }
 
     public static <T> T load(Configuration conf, String paramName, Class<T> clazz) throws Exception {
-        if (Writable.class.isAssignableFrom(clazz)) {
-            String s = conf.get(paramName);
+        String s = conf.get(paramName);
+        if (isWritable(clazz)) {
             return (T) new OpParameterSerDe.WritableOpParameterSerDe().de(s);
+        }
+        if (isInteger(clazz)) {
+            return (T) (Integer) Integer.parseInt(s);
+        }
+        if (isDouble(clazz)) {
+            return (T) (Double) Double.parseDouble(s);
+        }
+        if (isString(clazz)) {
+            return (T) s;
         }
         throw new IllegalArgumentException();
     }
 
 
     public static <T> void save(Configuration conf, String paramName, T value) throws Exception {
-        if (Writable.class.isAssignableFrom(value.getClass())) {
+        if (value instanceof Writable) {
             conf.set(paramName, new OpParameterSerDe.WritableOpParameterSerDe().ser((Writable) value));
+            return;
         }
-        throw new IllegalArgumentException();
+        if (value instanceof Integer) {
+            conf.setInt(paramName, (Integer) value);
+            return;
+        }
+        if (value instanceof String) {
+            conf.set(paramName, (String) value);
+            return;
+        }
+        if (value instanceof Double) {
+            conf.set(paramName, value.toString());
+            return;
+        }
+        throw new IllegalArgumentException("Unsupported parameter class: " + value.getClass());
     }
 
 

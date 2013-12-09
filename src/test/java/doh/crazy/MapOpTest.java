@@ -1,15 +1,26 @@
 package doh.crazy;
 
+import doh.ds.KeyValueDataSet;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.Utils;
+import org.apache.mahout.common.HadoopUtil;
 import org.apache.mahout.common.Pair;
+import org.apache.mahout.common.iterator.sequencefile.SequenceFileIterator;
 import org.junit.Test;
 
 
-import static org.junit.Assert.assertEquals;
+import java.util.Iterator;
 
-/**
- * Created by Alexander A. Senov
- * Synqera, 2012.
- */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 public class MapOpTest {
     public static class StringParseMapOp extends MapOp<Long, String, String, Double> {
         @Override
@@ -38,6 +49,27 @@ public class MapOpTest {
         }
     }
 
+    public static class SimpleParametrizedMapOp extends CSVParseMapOp<Integer> {
+
+        @OpParameter
+        private Integer mul;
+
+        public SimpleParametrizedMapOp() {}
+
+        public SimpleParametrizedMapOp(Integer mul) {
+            this.mul = mul;
+        }
+
+        @Override
+        protected Integer makeValue(Long aLong, String[] fields) {
+            Integer sum = 0;
+            for (String s : fields) {
+                sum += Integer.parseInt(s);
+            }
+            return sum * mul;
+        }
+    }
+
 
     @Test
     public void testMapOpGetFromToKeyValueSimple() {
@@ -61,6 +93,49 @@ public class MapOpTest {
 
     @Test
     public void testUnparameterized() throws Exception {
+        Configuration conf = new Configuration();
+        Path input = new Path("input");
+        Path tempDir = new Path("temp");
+        HadoopUtil.delete(conf, input, tempDir);
+
+        JobRunner jobRunner = new JobRunner();
+        TempPathManager tpm = new TempPathManager(tempDir);
+        Context context = new Context(tpm, jobRunner, conf);
+
+        Path inputData = new Path(input, "data");
+        SequenceFile.Writer writer = SequenceFile.
+                createWriter(inputData.getFileSystem(conf), conf, inputData, LongWritable.class, Text.class);
+
+        writer.append(new LongWritable(1), new Text("1"));
+        writer.append(new LongWritable(2), new Text("1,2"));
+        writer.append(new LongWritable(2), new Text("1,2,3"));
+
+        writer.close();
+
+        KeyValueDataSet<Long, String> csv = new KeyValueDataSet<Long, String>(context, input);
+        KeyValueDataSet<String, Integer> res = csv.map(new SimpleParametrizedMapOp(3));
+
+        // Path resData = ;
+        FileSystem fs = res.getPath().getFileSystem(conf);
+        FileStatus[] statuses = fs.listStatus(res.getPath(), new Utils.OutputFileUtils.OutputFilesFilter());
+        assertEquals(1, statuses.length);
+        Path resData = statuses[0].getPath();
+
+
+
+        Iterator<Pair<Text, IntWritable>> it = new SequenceFileIterator<Text, IntWritable>(resData, false, conf);
+
+        Pair<Text, IntWritable> p = it.next();
+        assertEquals("Line number: 1", p.getFirst().toString());
+        assertEquals(3, p.getSecond().get());
+        p = it.next();
+        assertEquals("Line number: 2", p.getFirst().toString());
+        assertEquals(9, p.getSecond().get());
+        p = it.next();
+        assertEquals("Line number: 2", p.getFirst().toString());
+        assertEquals(18, p.getSecond().get());
+        assertFalse(it.hasNext());
+
 
     }
 

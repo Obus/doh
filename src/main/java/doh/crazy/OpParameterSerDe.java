@@ -9,8 +9,45 @@ import org.apache.mahout.math.Arrays;
 import java.nio.charset.Charset;
 
 public interface OpParameterSerDe<T> {
+
     T de(String s) throws Exception;
     String ser(T parameter) throws Exception;
+
+    public static class IntegerOpParameterSerDe implements OpParameterSerDe<Integer> {
+        @Override
+        public Integer de(String s) throws Exception {
+            return Integer.parseInt(s);
+        }
+
+        @Override
+        public String ser(Integer parameter) throws Exception {
+            return parameter.toString();
+        }
+    }
+
+    public static class DoubleOpParameterSerDe implements OpParameterSerDe<Double> {
+        @Override
+        public Double de(String s) throws Exception {
+            return Double.parseDouble(s);
+        }
+
+        @Override
+        public String ser(Double parameter) throws Exception {
+            return parameter.toString();
+        }
+    }
+
+    public static class StringOpParameterSerDe implements OpParameterSerDe<String> {
+        @Override
+        public String de(String s) throws Exception {
+            return s;
+        }
+
+        @Override
+        public String ser(String parameter) throws Exception {
+            return parameter;
+        }
+    }
 
     public static class WritableOpParameterSerDe<W extends Writable> implements OpParameterSerDe<W> {
 

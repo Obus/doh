@@ -2,8 +2,12 @@ package doh.crazy;
 
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+
+
+import static doh.crazy.ClassUtils.*;
 
 
 public class WritableObjectDictionaryFactory {
@@ -18,6 +22,9 @@ public class WritableObjectDictionaryFactory {
         }
         if (Integer.class.isAssignableFrom(clazz)) {
             return (WritableObjectDictionary<O, W>) new IntegerWOD();
+        }
+        if (Long.class.isAssignableFrom(clazz)) {
+            return (WritableObjectDictionary<O, W>) new LongWOD();
         }
         if (Double.class.isAssignableFrom(clazz)) {
             return (WritableObjectDictionary<O, W>) new DoubleWOD();
@@ -35,10 +42,34 @@ public class WritableObjectDictionaryFactory {
         return null;
     }
     public static Class getObjectClass(Class<? extends Writable> writableClass) {
-        return null;
+        if (writableClass.equals(IntWritable.class)) {
+            return Integer.class;
+        }
+        if (writableClass.equals(DoubleWritable.class)) {
+            return Double.class;
+        }
+        if (writableClass.equals(Text.class)) {
+            return String.class;
+        }
+        if (isWritable(writableClass)) {
+            return writableClass;
+        }
+        throw new IllegalArgumentException("Unsupported parameter writable class: " + writableClass);
     }
     public static Class<? extends Writable> getWritableClass(Class objClass) {
-        return null;
+        if (isWritable(objClass)) {
+            return objClass;
+        }
+        if (isInteger(objClass)) {
+            return IntWritable.class;
+        }
+        if (isDouble(objClass)) {
+            return DoubleWritable.class;
+        }
+        if (isString(objClass)) {
+            return Text.class;
+        }
+        throw new IllegalArgumentException("Unsupported parameter class: " + objClass);
     }
 
 
@@ -63,6 +94,18 @@ public class WritableObjectDictionaryFactory {
         @Override
         public IntWritable getWritable(Integer obj) {
             return new IntWritable(obj);
+        }
+    }
+
+    public static class LongWOD implements WritableObjectDictionary<Long, LongWritable>{
+        @Override
+        public Long getObject(LongWritable writable) {
+            return writable.get();
+        }
+
+        @Override
+        public LongWritable getWritable(Long obj) {
+            return new LongWritable(obj);
         }
     }
 

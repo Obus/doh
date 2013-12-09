@@ -11,14 +11,16 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.Pair;
 
 import static doh.crazy.WritableObjectDictionaryFactory.getWritableClass;
 
 public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
-    protected KeyValueDataSet(Context context, Path path, Configuration conf) {
-        super(context, path, conf);
+    public KeyValueDataSet(Context context, Path path) {
+        super(context, path);
     }
 
     @Override
@@ -39,7 +41,7 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
 
         Configuration conf = this.getConf();
         Path input = this.getPath();
-        Path output = this.nextPath();
+        Path output = context.nextTempPath();
 
         Job job = new Job(conf, "MapReduce job");
         FileInputFormat.setInputPaths(job, input);
@@ -51,7 +53,11 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
         setUpReduceOpJob(job, reduceOp);
         job.setJobName(job.getJobName() + ".\n ReduceOp: " + reduceOp.getClass().getSimpleName());
 
-        return new KeyValueDataSet<TKEY, TVALUE>(context, output, conf);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        context.runJob(job);
+
+        return new KeyValueDataSet<TKEY, TVALUE>(context, output);
     }
 
     public <KEY, VALUE, TKEY, TVALUE> KeyValueDataSet<TKEY, TVALUE> map(
@@ -60,7 +66,7 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
 
         Configuration conf = this.getConf();
         Path input = this.getPath();
-        Path output = this.nextPath();
+        Path output = context.nextTempPath();
 
         Job job = new Job(conf, "Map only job");
         FileInputFormat.setInputPaths(job, input);
@@ -69,7 +75,11 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
         setUpMapOnlyOpJob(job, mapOp);
         job.setJobName(job.getJobName() + ".\n MapOp: " + mapOp.getClass().getSimpleName());
 
-        return new KeyValueDataSet<TKEY, TVALUE>(context, output, conf);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        context.runJob(job);
+
+        return new KeyValueDataSet<TKEY, TVALUE>(context, output);
     }
 
     public <KEY, VALUE, TKEY, TVALUE> KeyValueDataSet<TKEY, TVALUE> reduce(
@@ -78,7 +88,7 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
 
         Configuration conf = this.getConf();
         Path input = this.getPath();
-        Path output = this.nextPath();
+        Path output = context.nextTempPath();
 
         Job job = new Job(conf, "Reduce only job");
         FileInputFormat.setInputPaths(job, input);
@@ -87,7 +97,12 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
         setUpReduceOnlyOpJob(job, reduceOp);
         job.setJobName(job.getJobName() + ".\n ReduceOp: " + reduceOp.getClass().getSimpleName());
 
-        return new KeyValueDataSet<TKEY, TVALUE>(context, output, conf);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+        context.runJob(job);
+
+        return new KeyValueDataSet<TKEY, TVALUE>(context, output);
     }
 
 
@@ -99,10 +114,7 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
     }
 
     public static void setUpMapOnlyOpJob(Job job, MapOp mapOp) throws Exception {
-        OpSerializer.saveMapOpToConf(job.getConfiguration(), mapOp);
-        job.setMapperClass(SimpleOpMapper.class);
-        job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
-        job.setMapOutputValueClass(getWritableClass(mapOp.toValueClass()));
+        setUpMapOpJob(job, mapOp);
         job.setOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setOutputValueClass(getWritableClass(mapOp.toValueClass()));
     }
@@ -115,10 +127,7 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
     }
 
     public static void setUpReduceOnlyOpJob(Job job, ReduceOp reduceOp) throws Exception {
-        OpSerializer.saveReduceOpToConf(job.getConfiguration(), reduceOp);
-        job.setReducerClass(SimpleOpReducer.class);
-        job.setMapOutputKeyClass(getWritableClass(reduceOp.fromKeyClass()));
-        job.setMapOutputValueClass(getWritableClass(reduceOp.fromValueClass()));
+        setUpReduceOpJob(job, reduceOp);
         job.setOutputKeyClass(getWritableClass(reduceOp.toKeyClass()));
         job.setOutputValueClass(getWritableClass(reduceOp.toValueClass()));
     }

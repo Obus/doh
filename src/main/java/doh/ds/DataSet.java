@@ -19,12 +19,10 @@ import java.util.List;
 public abstract class DataSet<ORIGIN> {
     protected final Context context;
     protected final Path path;
-    protected final Configuration conf;
 
-    protected DataSet(Context context, Path path, Configuration conf) {
+    protected DataSet(Context context, Path path) {
         this.context = context;
         this.path = path;
-        this.conf = conf;
     }
 
     public abstract <TORIGIN> DataSet<TORIGIN> apply(Op<ORIGIN, TORIGIN> op) throws Exception ;
@@ -35,7 +33,7 @@ public abstract class DataSet<ORIGIN> {
     }
 
     public Configuration getConf() {
-        return conf;
+        return context.getConf();
     }
 
     public List<ORIGIN> read() {
