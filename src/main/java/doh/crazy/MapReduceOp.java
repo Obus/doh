@@ -1,14 +1,27 @@
 package doh.crazy;
 
-public interface MapReduceOp<FromKey, FromValue, ToKey, ToValue> {
+public abstract class MapReduceOp<FromKey, FromValue, ToKey, ToValue> {
 
-    Class<FromKey> fromKeyClass();
+    private final KV<ToKey, ToValue> KV = new KV<ToKey, ToValue>();
 
-    Class<FromValue> fromValueClass();
+    public Class<FromKey> fromKeyClass() {
+        return ReflectionUtils.getFromKeyClass(getClass());
+    }
 
-    Class<ToKey> toKeyClass();
+    public Class<FromValue> fromValueClass() {
+        return ReflectionUtils.getFromValueClass(getClass());
+    }
 
-    Class<ToValue> toValueClass();
+    public Class<ToKey> toKeyClass() {
+        return ReflectionUtils.getToKeyClass(getClass());
+    }
+
+    public Class<ToValue> toValueClass() {
+        return ReflectionUtils.getToValueClass(getClass());
+    }
+
+
+    protected abstract KV<ToKey, ToValue> keyValue(ToKey key, ToValue value);
 
 
 }

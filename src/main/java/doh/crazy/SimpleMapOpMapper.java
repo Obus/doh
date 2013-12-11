@@ -11,15 +11,18 @@ import java.io.IOException;
 import static doh.crazy.WritableObjectDictionaryFactory.createDictionary;
 
 
-public class SimpleOpMapper<
-        WRITABLE_FROM_KEY extends WritableComparable,
-        WRITABLE_FROM_VALUE extends Writable,
-        WRITABLE_TO_KEY extends WritableComparable,
-        WRITABLE_TO_VALUE extends Writable,
-        FROM_KEY,
-        FROM_VALUE,
-        TO_KEY,
-        TO_VALUE> extends Mapper<WRITABLE_FROM_KEY, WRITABLE_FROM_VALUE, WRITABLE_TO_KEY, WRITABLE_TO_VALUE> {
+public class SimpleMapOpMapper
+        <
+            WRITABLE_FROM_KEY extends WritableComparable,
+            WRITABLE_FROM_VALUE extends Writable,
+            WRITABLE_TO_KEY extends WritableComparable,
+            WRITABLE_TO_VALUE extends Writable,
+            FROM_KEY,
+            FROM_VALUE,
+            TO_KEY,
+            TO_VALUE
+        >
+        extends Mapper<WRITABLE_FROM_KEY, WRITABLE_FROM_VALUE, WRITABLE_TO_KEY, WRITABLE_TO_VALUE> {
 
     private MapOp<FROM_KEY, FROM_VALUE, TO_KEY, TO_VALUE> op;
     private WritableObjectDictionary<FROM_KEY, WRITABLE_FROM_KEY> fromKeyDictionary;
@@ -42,12 +45,12 @@ public class SimpleOpMapper<
 
     @Override
     protected void map(WRITABLE_FROM_KEY key, WRITABLE_FROM_VALUE value, Context context) throws IOException, InterruptedException {
-        Pair<TO_KEY, TO_VALUE> p = op.map(
+        KV<TO_KEY, TO_VALUE> p = op.map(
                 fromKeyDictionary.getObject(key),
                 fromValueDictionary.getObject(value));
         context.write(
-                toKeyDictionary.getWritable(p.getFirst()),
-                toValueDictionary.getWritable(p.getSecond())
+                toKeyDictionary.getWritable(p.key),
+                toValueDictionary.getWritable(p.value)
         );
     }
 }

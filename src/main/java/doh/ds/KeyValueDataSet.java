@@ -1,38 +1,67 @@
 package doh.ds;
 
-import doh.crazy.Context;
-import doh.crazy.MapOp;
-import doh.crazy.Op;
-import doh.crazy.OpSerializer;
-import doh.crazy.ReduceOp;
-import doh.crazy.SimpleOpMapper;
-import doh.crazy.SimpleOpReducer;
+import com.synqera.bigkore.rank.PlatformUtils;
+import doh.crazy.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.Pair;
+import org.apache.mahout.common.iterator.sequencefile.SequenceFileDirIterator;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import static doh.crazy.WritableObjectDictionaryFactory.getObjectClass;
+import static doh.crazy.WritableObjectDictionaryFactory.getWritable;
 import static doh.crazy.WritableObjectDictionaryFactory.getWritableClass;
 
-public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
-    public KeyValueDataSet(Context context, Path path) {
-        super(context, path);
+public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> implements Iterable<KV<KEY, VALUE>> {
+    public KeyValueDataSet(Path path) {
+        super(path);
+    }
+
+    public Iterator<KV<KEY, VALUE>> iteratorChecked() throws IOException {
+        return new KeyValueIterator();
+    }
+
+    public MapKeyValueDataSet<KEY, VALUE> toMapKVDS() {
+        MapKeyValueDataSet<KEY, VALUE> mapKVDS = new MapKeyValueDataSet<KEY, VALUE>(getPath());
+        mapKVDS.setContext(context);
+        return mapKVDS;
     }
 
     @Override
-    public <TORIGIN> DataSet<TORIGIN> apply(Op<Pair<KEY, VALUE>, TORIGIN> op) throws Exception {
+    public Iterator<KV<KEY, VALUE>> iterator() {
+        try {
+            return iteratorChecked();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to iterate over keyValueDatSet", e);
+        }
+    }
+
+    @Override
+    public <TORIGIN> DataSet<TORIGIN> apply(Op<KV<KEY, VALUE>, TORIGIN> op) throws Exception {
         if (op instanceof MapOp) {
             return map((MapOp) op);
+        }
+        else if (op instanceof FlatMapOp) {
+            return flatMap((FlatMapOp) op);
         }
         else if (op instanceof ReduceOp) {
             return reduce((ReduceOp) op);
         }
         throw new IllegalArgumentException("Unsupported operation type " + op.getClass());
     }
+
 
     public <KEY, VALUE, BKEY, BVALUE, TKEY, TVALUE> KeyValueDataSet<TKEY, TVALUE> mapReduce(
             MapOp<KEY, VALUE, BKEY, BVALUE> mapOp,
@@ -57,8 +86,9 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         context.runJob(job);
 
-        return new KeyValueDataSet<TKEY, TVALUE>(context, output);
+        return create(context, output);
     }
+
 
     public <KEY, VALUE, TKEY, TVALUE> KeyValueDataSet<TKEY, TVALUE> map(
             MapOp<KEY, VALUE, TKEY, TVALUE> mapOp
@@ -79,8 +109,32 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         context.runJob(job);
 
-        return new KeyValueDataSet<TKEY, TVALUE>(context, output);
+        return create(context, output);
     }
+
+
+    public <KEY, VALUE, TKEY, TVALUE> KeyValueDataSet<TKEY, TVALUE> flatMap(
+            FlatMapOp<KEY, VALUE, TKEY, TVALUE> flatMapOp
+    ) throws Exception {
+
+        Configuration conf = this.getConf();
+        Path input = this.getPath();
+        Path output = context.nextTempPath();
+
+        Job job = new Job(conf, "FlatMap only job");
+        FileInputFormat.setInputPaths(job, input);
+        FileOutputFormat.setOutputPath(job, output);
+
+        setUpFlatMapOnlyOpJob(job, flatMapOp);
+        job.setJobName(job.getJobName() + ".\n FlatMapOp: " + flatMapOp.getClass().getSimpleName());
+
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        context.runJob(job);
+
+        return create(context, output);
+    }
+
 
     public <KEY, VALUE, TKEY, TVALUE> KeyValueDataSet<TKEY, TVALUE> reduce(
             ReduceOp<KEY, VALUE, TKEY, TVALUE> reduceOp
@@ -95,6 +149,8 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
         FileOutputFormat.setOutputPath(job, output);
 
         setUpReduceOnlyOpJob(job, reduceOp);
+        job.setMapOutputKeyClass(getWritableClass(this.keyClass()));
+        job.setMapOutputValueClass(getWritableClass(this.valueClass()));
         job.setJobName(job.getJobName() + ".\n ReduceOp: " + reduceOp.getClass().getSimpleName());
 
         job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -102,16 +158,17 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
 
         context.runJob(job);
 
-        return new KeyValueDataSet<TKEY, TVALUE>(context, output);
+        return create(context, output);
     }
 
 
     public static void setUpMapOpJob(Job job, MapOp mapOp) throws Exception {
         OpSerializer.saveMapOpToConf(job.getConfiguration(), mapOp);
-        job.setMapperClass(SimpleOpMapper.class);
+        job.setMapperClass(SimpleMapOpMapper.class);
         job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setMapOutputValueClass(getWritableClass(mapOp.toValueClass()));
     }
+
 
     public static void setUpMapOnlyOpJob(Job job, MapOp mapOp) throws Exception {
         setUpMapOpJob(job, mapOp);
@@ -119,9 +176,22 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
         job.setOutputValueClass(getWritableClass(mapOp.toValueClass()));
     }
 
+    public static void setUpFlatMapOpJob(Job job, FlatMapOp mapOp) throws Exception {
+        OpSerializer.saveFlatMapOpToConf(job.getConfiguration(), mapOp);
+        job.setMapperClass(SimpleFlatMapOpMapper.class);
+        job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
+        job.setMapOutputValueClass(getWritableClass(mapOp.toValueClass()));
+    }
+
+    public static void setUpFlatMapOnlyOpJob(Job job, FlatMapOp mapOp) throws Exception {
+        setUpFlatMapOpJob(job, mapOp);
+        job.setOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
+        job.setOutputValueClass(getWritableClass(mapOp.toValueClass()));
+    }
+
     public static void setUpReduceOpJob(Job job, ReduceOp reduceOp) throws Exception {
         OpSerializer.saveReduceOpToConf(job.getConfiguration(), reduceOp);
-        job.setReducerClass(SimpleOpReducer.class);
+        job.setReducerClass(SimpleReduceOpReducer.class);
         job.setOutputKeyClass(getWritableClass(reduceOp.toKeyClass()));
         job.setOutputValueClass(getWritableClass(reduceOp.toValueClass()));
     }
@@ -132,12 +202,61 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<Pair<KEY, VALUE>> {
         job.setOutputValueClass(getWritableClass(reduceOp.toValueClass()));
     }
 
-    public Class<KEY> keyClass() {
-        return null;
+    public Class<KEY> keyClass() throws IOException {
+        Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
+        SequenceFile.Reader r
+                = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
+        return getObjectClass((Class<? extends Writable>) r.getKeyClass());
     }
 
-    public Class<VALUE> valueClass() {
-        return null;
+    public Class<VALUE> valueClass() throws IOException{
+        Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
+        SequenceFile.Reader r
+                = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
+        return getObjectClass((Class<? extends Writable>) r.getValueClass());
+    }
+
+    public class KeyValueIterator implements Iterator<KV<KEY, VALUE>> {
+        private final SequenceFileDirIterator sequenceFileDirIterator;
+        private final WritableObjectDictionaryFactory.WritableObjectDictionary<KEY, Writable> keyDictionary;
+        private final WritableObjectDictionaryFactory.WritableObjectDictionary<VALUE, Writable> valueDictionary;
+
+        public KeyValueIterator() throws IOException {
+            sequenceFileDirIterator = new SequenceFileDirIterator(
+                    PlatformUtils.listOutputFiles(context.getConf(), getPath()),
+                    false,
+                    getConf());
+            keyDictionary = WritableObjectDictionaryFactory.createDictionary(keyClass());
+            valueDictionary = WritableObjectDictionaryFactory.createDictionary(valueClass());
+        }
+
+        @Override
+        public boolean hasNext() {
+            return sequenceFileDirIterator.hasNext();
+        }
+
+        @Override
+        public KV<KEY, VALUE> next() {
+            Pair<Writable, Writable> pairOfWritables = (Pair<Writable, Writable>) sequenceFileDirIterator.next();
+            return kv.set(
+                    keyDictionary.getObject(pairOfWritables.getFirst()),
+                    valueDictionary.getObject(pairOfWritables.getSecond())
+            );
+        }
+
+        private final KV<KEY, VALUE> kv = new KV<KEY, VALUE>();
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+
+    public static <KEY, VALUE> KeyValueDataSet<KEY, VALUE> create(Context context, Path path) {
+        KeyValueDataSet<KEY, VALUE> kvds = new KeyValueDataSet<KEY, VALUE>(path);
+        kvds.setContext(context);
+        return kvds;
     }
 
 }

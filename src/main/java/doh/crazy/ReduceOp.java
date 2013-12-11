@@ -8,69 +8,25 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 
-public abstract class ReduceOp<FromKey, FromValue, ToKey, ToValue> implements
-        Op<Pair<FromKey, Iterable<FromValue>>, Pair<ToKey, ToValue>>,
-        MapReduceOp<FromKey, FromValue, ToKey, ToValue> {
+public abstract class ReduceOp<FromKey, FromValue, ToKey, ToValue>
+        extends MapReduceOp<FromKey, FromValue, ToKey, ToValue>
+        implements Op<KV<FromKey, Iterable<FromValue>>, KV<ToKey, ToValue>> {
+
+    protected final KV<ToKey, ToValue> kv = new KV<ToKey, ToValue>();
 
     @Override
-    public Pair<ToKey, ToValue> apply(Pair<FromKey, Iterable<FromValue>> f) {
-        return reduce(f.getFirst(), f.getSecond());
-    }
-
-    public abstract Pair<ToKey, ToValue> reduce(FromKey key, Iterable<FromValue> values);
-
-    public Pair<ToKey, ToValue> pair(ToKey key, ToValue value) {
-        return new Pair<ToKey, ToValue>(key, value);
-    }
-
-
-    @Override
-    public Class<FromKey> fromKeyClass() {
-        return ReflectionUtils.getFromKeyClass(getClass());
+    public KV<ToKey, ToValue> apply(KV<FromKey, Iterable<FromValue>> f) {
+        return reduce(f.key, f.value);
     }
 
     @Override
-    public Class<FromValue> fromValueClass() {
-        return ReflectionUtils.getFromValueClass(getClass());
+    protected KV<ToKey, ToValue> keyValue(ToKey toKey, ToValue toValue) {
+        return kv.set(toKey, toValue);
     }
 
-    @Override
-    public Class<ToKey> toKeyClass() {
-        return ReflectionUtils.getToKeyClass(getClass());
-    }
+    public abstract KV<ToKey, ToValue> reduce(FromKey key, Iterable<FromValue> values);
 
-    @Override
-    public Class<ToValue> toValueClass() {
-        return ReflectionUtils.getToValueClass(getClass());
-    }
 
-    public static class ClusterDiameterReduceOp extends ReduceOp<String, Double, WritableComparable, String> {
-        private int intValue;
-        private Integer integerValue;
 
-        @Override
-        public Pair<WritableComparable, String> reduce(String s, Iterable<Double> doubles) {
-            return pair(new BytesWritable(), s + "," + 2 * max(doubles));
-        }
-    }
 
-    public static void main(String[] args) {
-        Class c = ClusterDiameterReduceOp.class;
-        Method[] methods = c.getDeclaredMethods();
-        Method m = methods[0];
-        Field[] fields = c.getDeclaredFields();
-        Field f = fields[0];
-    }
-
-    public static <T extends Comparable> T max(Iterable<T> iterable) {
-        T result = null;
-        for (T i : iterable) {
-            if (result == null) {
-                result = i;
-            } else {
-                result = result.compareTo(i) > 0 ? result : i;
-            }
-        }
-        return result;
-    }
 }

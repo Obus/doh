@@ -15,6 +15,11 @@ public class Context {
         this.conf = conf;
     }
 
+    public static Context create(Configuration conf, Path tempDir) {
+        TempPathManager tempPathManager = new TempPathManager(tempDir);
+        return new Context(tempPathManager, new JobRunner(), conf);
+    }
+
     public Path nextTempPath() throws Exception {
         return tempPathManager.getNextPath();
     }

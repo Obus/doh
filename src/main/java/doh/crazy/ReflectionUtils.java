@@ -1,10 +1,14 @@
 package doh.crazy;
 
 
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Stack;
 
 
@@ -34,11 +38,33 @@ public class ReflectionUtils {
         if (MapOp.class.isAssignableFrom(clazz)) {
             return MapOp.class;
         }
+        if (FlatMapOp.class.isAssignableFrom(clazz)) {
+            return FlatMapOp.class;
+        }
         else if (ReduceOp.class.isAssignableFrom(clazz)) {
             return ReduceOp.class;
         }
         throw new IllegalArgumentException();
     }
+
+
+    public static List<Field> getAllDeclaredFields(Class clazz) {
+        List<Field> fields = new ArrayList<Field>();
+        addAllDeclaredFieldsRec(fields, clazz);
+        return fields;
+    }
+
+    public static void addAllDeclaredFieldsRec(List<Field> fields, Class clazz) {
+        fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+        if (!clazz.getSuperclass().equals(Object.class)) {
+            addAllDeclaredFieldsRec(fields, clazz.getSuperclass());
+        }
+    }
+
+
+
+
+
 
     /**
      *  весь код ниже бездумно скопирован с http://habrahabr.ru/post/66593/
@@ -132,6 +158,8 @@ public class ReflectionUtils {
 
         return (Class) result;
     }
+
+
 
     public static int getParameterTypeDeclarationIndex(final TypeVariable typeVariable) {
         GenericDeclaration genericDeclaration = typeVariable.getGenericDeclaration();

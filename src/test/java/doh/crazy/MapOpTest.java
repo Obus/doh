@@ -22,17 +22,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 public class MapOpTest {
+
     public static class StringParseMapOp extends MapOp<Long, String, String, Double> {
         @Override
-        public Pair<String, Double> map(Long aLong, String s) {
-            return pair("Line number: " + aLong, Double.parseDouble(s));
+        public KV<String, Double> map(Long aLong, String s) {
+            return keyValue("Line number: " + aLong, Double.parseDouble(s));
         }
     }
 
     public abstract static class CSVParseMapOp<TK> extends MapOp<Long, String, String, TK> {
         @Override
-        public Pair<String, TK> map(Long aLong, String s) {
-            return pair("Line number: " + aLong, makeValue(aLong, s.split(",")));
+        public KV<String, TK> map(Long aLong, String s) {
+            return keyValue("Line number: " + aLong, makeValue(aLong, s.split(",")));
         }
 
         protected abstract TK makeValue(Long aLong, String[] fields);
@@ -69,7 +70,6 @@ public class MapOpTest {
             return sum * mul;
         }
     }
-
 
     @Test
     public void testMapOpGetFromToKeyValueSimple() {
@@ -112,7 +112,8 @@ public class MapOpTest {
 
         writer.close();
 
-        KeyValueDataSet<Long, String> csv = new KeyValueDataSet<Long, String>(context, input);
+        KeyValueDataSet<Long, String> csv = new KeyValueDataSet<Long, String>(input);
+        csv.setContext(context);
         KeyValueDataSet<String, Integer> res = csv.map(new SimpleParametrizedMapOp(3));
 
         // Path resData = ;

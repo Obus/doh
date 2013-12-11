@@ -12,15 +12,18 @@ import static doh.crazy.WritableObjectDictionaryFactory.createDictionary;
 import static doh.crazy.WritableObjectDictionaryFactory.WritableObjectDictionary;
 
 
-public class SimpleOpReducer<
-        WRITABLE_FROM_KEY extends WritableComparable,
-        WRITABLE_FROM_VALUE extends Writable,
-        WRITABLE_TO_KEY extends WritableComparable,
-        WRITABLE_TO_VALUE extends Writable,
-        FROM_KEY,
-        FROM_VALUE,
-        TO_KEY,
-        TO_VALUE> extends Reducer<WRITABLE_FROM_KEY, WRITABLE_FROM_VALUE, WRITABLE_TO_KEY, WRITABLE_TO_VALUE> {
+public class SimpleReduceOpReducer
+        <
+                WRITABLE_FROM_KEY extends WritableComparable,
+                WRITABLE_FROM_VALUE extends Writable,
+                WRITABLE_TO_KEY extends WritableComparable,
+                WRITABLE_TO_VALUE extends Writable,
+                FROM_KEY,
+                FROM_VALUE,
+                TO_KEY,
+                TO_VALUE
+        >
+        extends Reducer<WRITABLE_FROM_KEY, WRITABLE_FROM_VALUE, WRITABLE_TO_KEY, WRITABLE_TO_VALUE> {
 
     private ReduceOp<FROM_KEY, FROM_VALUE, TO_KEY, TO_VALUE> op;
     private WritableObjectDictionary<FROM_KEY, WRITABLE_FROM_KEY> fromKeyDictionary;
@@ -43,12 +46,12 @@ public class SimpleOpReducer<
 
     @Override
     protected void reduce(WRITABLE_FROM_KEY key, Iterable<WRITABLE_FROM_VALUE> values, Context context) throws IOException, InterruptedException {
-        Pair<TO_KEY, TO_VALUE> p = op.reduce(
+        KV<TO_KEY, TO_VALUE> p = op.reduce(
                 fromKeyDictionary.getObject(key),
                 objectsIterable(values, fromValueDictionary));
         context.write(
-                toKeyDictionary.getWritable(p.getFirst()),
-                toValueDictionary.getWritable(p.getSecond())
+                toKeyDictionary.getWritable(p.key),
+                toValueDictionary.getWritable(p.value)
         );
     }
 

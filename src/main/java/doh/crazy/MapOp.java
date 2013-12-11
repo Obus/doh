@@ -1,59 +1,22 @@
 package doh.crazy;
 
-import org.apache.hadoop.io.WritableComparable;
-import org.apache.mahout.common.Pair;
-import org.apache.mahout.common.distance.DistanceMeasure;
-import org.apache.mahout.math.Vector;
 
-public abstract class MapOp<FromKey, FromValue, ToKey, ToValue> implements
-        Op<Pair<FromKey, FromValue>, Pair<ToKey, ToValue>>,
-        MapReduceOp<FromKey, FromValue, ToKey, ToValue> {
+public abstract class MapOp<FromKey, FromValue, ToKey, ToValue>
+        extends MapReduceOp<FromKey, FromValue, ToKey, ToValue>
+        implements Op<KV<FromKey, FromValue>, KV<ToKey, ToValue>>{
+    protected final KV<ToKey, ToValue> kv = new KV<ToKey, ToValue>();
 
     @Override
-    public Pair<ToKey, ToValue> apply(Pair<FromKey, FromValue> f) {
-        return map(f.getFirst(), f.getSecond());
-    }
-
-    public abstract Pair<ToKey, ToValue> map(FromKey key, FromValue value);
-
-    @Override
-    public Class<FromKey> fromKeyClass() {
-        return ReflectionUtils.getFromKeyClass(getClass());
+    public KV<ToKey, ToValue> apply(KV<FromKey, FromValue> f) {
+        return map(f.key, f.value);
     }
 
     @Override
-    public Class<FromValue> fromValueClass() {
-        return ReflectionUtils.getFromValueClass(getClass());
+    protected KV<ToKey, ToValue> keyValue(ToKey toKey, ToValue toValue) {
+        return kv.set(toKey, toValue);
     }
 
-    @Override
-    public Class<ToKey> toKeyClass() {
-        return ReflectionUtils.getToKeyClass(getClass());
-    }
+    public abstract KV<ToKey, ToValue> map(FromKey key, FromValue value);
 
-    @Override
-    public Class<ToValue> toValueClass() {
-        return ReflectionUtils.getToValueClass(getClass());
-    }
-
-    public Pair<ToKey, ToValue> pair(ToKey key, ToValue value) {
-        return new Pair<ToKey, ToValue>(key, value);
-    }
-
-    public static class ClusterDiameterMapOp extends MapOp<WritableComparable, Vector, String, Double> {
-
-        @OpParameter
-        private DistanceMeasure dm;
-        @OpParameter
-        private Vector center;
-        @OpParameter
-        private String id;
-
-
-        @Override
-        public Pair<String, Double> map(WritableComparable writableComparable, Vector point) {
-            return pair(id, dm.distance(center, point));
-        }
-    }
 
 }

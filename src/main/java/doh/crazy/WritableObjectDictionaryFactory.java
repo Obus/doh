@@ -63,6 +63,9 @@ public class WritableObjectDictionaryFactory {
         if (isInteger(objClass)) {
             return IntWritable.class;
         }
+        if (isLong(objClass)) {
+            return LongWritable.class;
+        }
         if (isDouble(objClass)) {
             return DoubleWritable.class;
         }
