@@ -42,11 +42,11 @@ public class SimpleFlatMapOpMapper
 
     @Override
     protected void map(WRITABLE_FROM_KEY key, WRITABLE_FROM_VALUE value, Context context) throws IOException, InterruptedException {
-        Iterable<KV<TO_KEY, TO_VALUE>> pIt = op.flatMap(
+        op.flatMap(
                 fromKeyDictionary.getObject(key),
                 fromValueDictionary.getObject(value));
 
-        for (KV<TO_KEY, TO_VALUE> p : pIt) {
+        for (KV<TO_KEY, TO_VALUE> p : op.getKvList()) {
             context.write(
                     toKeyDictionary.getWritable(p.key),
                     toValueDictionary.getWritable(p.value)

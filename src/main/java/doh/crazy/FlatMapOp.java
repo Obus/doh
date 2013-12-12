@@ -15,6 +15,10 @@ public abstract class FlatMapOp<FromKey, FromValue, ToKey, ToValue>
         return kvList;
     }
 
+    public List<KV<ToKey, ToValue>> getKvList() {
+        return kvList;
+    }
+
     @Override
     protected KV<ToKey, ToValue> keyValue(ToKey toKey, ToValue toValue) {
         return new KV<ToKey, ToValue>().set(toKey, toValue);
@@ -31,6 +35,6 @@ public abstract class FlatMapOp<FromKey, FromValue, ToKey, ToValue>
 //        return kvList;
 //    }
 
-    public abstract void flatMap(FromKey key, FromValue value);
+     public abstract void flatMap(FromKey key, FromValue value);
 
 }
