@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -149,8 +150,6 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
         FileOutputFormat.setOutputPath(job, output);
 
         setUpReduceOnlyOpJob(job, reduceOp);
-        job.setMapOutputKeyClass(getWritableClass(this.keyClass()));
-        job.setMapOutputValueClass(getWritableClass(this.valueClass()));
         job.setJobName(job.getJobName() + ".\n ReduceOp: " + reduceOp.getClass().getSimpleName());
 
         job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -162,7 +161,7 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
     }
 
 
-    public static void setUpMapOpJob(Job job, MapOp mapOp) throws Exception {
+    public void setUpMapOpJob(Job job, MapOp mapOp) throws Exception {
         OpSerializer.saveMapOpToConf(job.getConfiguration(), mapOp);
         job.setMapperClass(SimpleMapOpMapper.class);
         job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
@@ -170,50 +169,67 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
     }
 
 
-    public static void setUpMapOnlyOpJob(Job job, MapOp mapOp) throws Exception {
+    public void setUpMapOnlyOpJob(Job job, MapOp mapOp) throws Exception {
         setUpMapOpJob(job, mapOp);
         job.setOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setOutputValueClass(getWritableClass(mapOp.toValueClass()));
     }
 
-    public static void setUpFlatMapOpJob(Job job, FlatMapOp mapOp) throws Exception {
+    public void setUpFlatMapOpJob(Job job, FlatMapOp mapOp) throws Exception {
         OpSerializer.saveFlatMapOpToConf(job.getConfiguration(), mapOp);
         job.setMapperClass(SimpleFlatMapOpMapper.class);
         job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setMapOutputValueClass(getWritableClass(mapOp.toValueClass()));
     }
 
-    public static void setUpFlatMapOnlyOpJob(Job job, FlatMapOp mapOp) throws Exception {
+    public void setUpFlatMapOnlyOpJob(Job job, FlatMapOp mapOp) throws Exception {
         setUpFlatMapOpJob(job, mapOp);
         job.setOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setOutputValueClass(getWritableClass(mapOp.toValueClass()));
     }
 
-    public static void setUpReduceOpJob(Job job, ReduceOp reduceOp) throws Exception {
+    public void setUpReduceOpJob(Job job, ReduceOp reduceOp) throws Exception {
         OpSerializer.saveReduceOpToConf(job.getConfiguration(), reduceOp);
         job.setReducerClass(SimpleReduceOpReducer.class);
-        job.setOutputKeyClass(getWritableClass(reduceOp.toKeyClass()));
+        if (reduceOp instanceof ValueOnlyReduceOp) {
+            job.setOutputKeyClass(this.writableKeyClass());
+        }
+        else {
+            job.setOutputKeyClass(getWritableClass(reduceOp.toKeyClass()));
+        }
         job.setOutputValueClass(getWritableClass(reduceOp.toValueClass()));
     }
 
-    public static void setUpReduceOnlyOpJob(Job job, ReduceOp reduceOp) throws Exception {
+    public void setUpReduceOnlyOpJob(Job job, ReduceOp reduceOp) throws Exception {
         setUpReduceOpJob(job, reduceOp);
-        job.setOutputKeyClass(getWritableClass(reduceOp.toKeyClass()));
-        job.setOutputValueClass(getWritableClass(reduceOp.toValueClass()));
+//        job.setOutputKeyClass(getWritableClass(reduceOp.toKeyClass()));
+//        job.setOutputValueClass(getWritableClass(reduceOp.toValueClass()));
+        job.setMapOutputKeyClass(this.writableKeyClass());
+        job.setMapOutputValueClass(this.writableValueClass());
+    }
+
+
+
+    public Class<?> writableKeyClass() throws IOException {
+        Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
+        SequenceFile.Reader r
+                = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
+        return r.getKeyClass();
+    }
+
+    public Class<?> writableValueClass() throws IOException{
+        Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
+        SequenceFile.Reader r
+                = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
+        return r.getValueClass();
     }
 
     public Class<KEY> keyClass() throws IOException {
-        Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
-        SequenceFile.Reader r
-                = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
-        return getObjectClass((Class<? extends Writable>) r.getKeyClass());
+        return getObjectClass((Class<? extends Writable>) this.writableKeyClass());
     }
 
     public Class<VALUE> valueClass() throws IOException{
-        Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
-        SequenceFile.Reader r
-                = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
-        return getObjectClass((Class<? extends Writable>) r.getValueClass());
+        return getObjectClass((Class<? extends Writable>) this.writableValueClass());
     }
 
     public class KeyValueIterator implements Iterator<KV<KEY, VALUE>> {

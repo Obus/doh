@@ -1,6 +1,9 @@
 package doh.crazy;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.ParameterizedType;
@@ -14,6 +17,8 @@ import java.util.Stack;
 
 
 public class ReflectionUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReflectionUtils.class);
+
     public static Type[] getTypes(Class clazz) {
         return clazz.getTypeParameters();
     }
@@ -135,8 +140,9 @@ public class ReflectionUtils {
         if (result instanceof TypeVariable) {
             // Мы спустились до самого низа, но даже там нужный параметр не имеет явного задания.
             // Следовательно из-за "Type erasure" узнать класс для параметра невозможно.
-            throw new IllegalStateException("Unable to resolve type variable " + result + "."
+            LOGGER.warn("Unable to resolve type variable " + result + "."
                     + " Try to replace instances of parametrized class with its non-parameterized subtype.");
+            return UNKNOWN_CLASS;
         }
 
         if (result instanceof ParameterizedType) {
@@ -158,6 +164,9 @@ public class ReflectionUtils {
 
         return (Class) result;
     }
+
+    public static final Class UNKNOWN_CLASS = UnknownClass.class;
+    public static final class UnknownClass {};
 
 
 

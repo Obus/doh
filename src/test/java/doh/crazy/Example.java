@@ -39,12 +39,9 @@ public class Example {
         KeyValueDataSet<Consumer, Double> consumerPaymentsStd
                 = consumerPayments.reduce(valuesStd(consumerPaymentsAvg));
 
-
-
         for (KV<Consumer, Double> kv : consumerPaymentsStd) {
             System.out.println(kv);
         }
-
     }
 
     public static RawUserStories make() throws Exception {
@@ -102,7 +99,6 @@ public class Example {
                 )).toString()));
 
 
-
         writer.append(
                 new BytesWritable(),
                 new Text(new UserStory(Arrays.asList(
@@ -119,7 +115,6 @@ public class Example {
                         new Product("piano"),
                         new Payment(150000, Payment.Type.cash)
                 )).toString()));
-
 
 
         writer.append(

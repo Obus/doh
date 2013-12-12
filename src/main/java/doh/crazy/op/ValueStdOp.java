@@ -2,15 +2,15 @@ package doh.crazy.op;
 
 import com.synqera.bigkore.model.fact.Consumer;
 import doh.crazy.OpParameter;
-import doh.crazy.ReduceOp;
+import doh.crazy.ValueOnlyReduceOp;
 import doh.ds.MapKeyValueDataSet;
 
-public class ValueStdOp<Key> extends ReduceOp<Key, Long, Key, Double> {
+public class ValueStdOp<Key> extends ValueOnlyReduceOp<Key, Long, Double> {
     @OpParameter
     public MapKeyValueDataSet<Key, Double> keysAvg;
 
     @Override
-    public doh.crazy.KV<Key, Double> reduce(Key key, Iterable<Long> values) {
+    public Double reduceValue(Key key, Iterable<Long> values) {
         double avg = keysAvg.get(key);
         double std = 0;
         double count = 0;
@@ -18,7 +18,7 @@ public class ValueStdOp<Key> extends ReduceOp<Key, Long, Key, Double> {
             std += Math.pow(v - avg, 2);
             count++;
         }
-        return keyValue(key, Math.sqrt(std / count));
+        return Math.sqrt(std / count);
     }
 
     public static class ConsumerValuesStdOp extends ValueStdOp<Consumer> {}

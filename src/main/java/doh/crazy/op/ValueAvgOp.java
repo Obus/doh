@@ -1,19 +1,18 @@
 package doh.crazy.op;
 
 import com.synqera.bigkore.model.fact.Consumer;
-import doh.crazy.KV;
-import doh.crazy.ReduceOp;
+import doh.crazy.ValueOnlyReduceOp;
 
-public class ValueAvgOp<Key> extends ReduceOp<Key, Long, Key, Double> {
+public class ValueAvgOp<Key> extends ValueOnlyReduceOp<Key, Long, Double> {
     @Override
-    public KV<Key, Double> reduce(Key o, Iterable<Long> values) {
+    public Double reduceValue(Key key, Iterable<Long> values) {
         long count = 0;
         long sum = 0;
         for (Long v : values) {
             sum += v;
             count++;
         }
-        return keyValue(o, (double) sum / count);
+        return (double) sum / count;
     }
 
     public static class ConsumerValuesAvgOp extends ValueAvgOp<Consumer> {}
