@@ -1,17 +1,24 @@
-DOH - I don't know what does it mean.
+DOH — I don't know what does it mean.
 ================================
 
 Intro
 -------------------------
 This framework based on two main concepts: 
-1. KeyValueDataSet - represents the sequence file on hdfs, controls its data and provide usefull method to manipulate it
-2. Operation - operation which transform on KeyValueDataSet to another (Map-, Reduce-, or MapReduce- Job).
+1. KeyValueDataSet — represents the sequence file on hdfs, controls its data and provide usefull method to manipulate it
+2. Operation — operation which transform on KeyValueDataSet to another (Map-, Reduce-, or MapReduce- Job).
 
 The main goal of this framework is 
 1. To abstract from the Hadoop routines like: Jobs, Writables, Configuration, IO routines, etc.
 2. To handle data stored in HDFS as data-driven collection-like object rather then Path object and operate on it by high-order functions (like map and reduce).
 
-Why it is cool?
+DOH was inspired by [Spark](http://spark.incubator.apache.org/) (scala-based distributed computing framework). Spark overwhelm DOH in both codability (because of scala) and computational perfomance (cause Spark supports in-memory computations). However, Spark suffers from two major disadvantages:
+
+1. Scala. Scala is much less common than Java and it is much harder to learn. Almost everyone who use Hadoop knows Java and if you not using it — you definity don't need DOH. 
+2. Spark has really poor Hadoop support.
+
+So, if you like the idea beside the Spark, but you can't aford it due to some limitations — try DOH!
+
+Why is it cool? (introductionary example)
 -------------------------
 WordCount is the most popular illustration of MapReduce paradigm benefits. Despite that it hide all of MapReduce defects, we will use it as an example.
 WordCount take directory with text files and create a new directory with files contain all occured words with their frequencies.
@@ -33,7 +40,7 @@ Below you can see WordCount implemented using DOH.
           public void flatMap(Long aLong, String line) {
               StringTokenizer tokenizer = new StringTokenizer(line);
               while (tokenizer.hasMoreTokens()) {
-                  emitKeyValue(tokenizer.nextToken(), 1l);
+                  emitKeyValue(tokenizer.nextToken(), 1L);
               }
           }
       }
@@ -61,8 +68,9 @@ Below you can see WordCount implemented using DOH.
 
   
 It's easy to see that this implementation is much more clear and concise than the Hadoop MapReduce one.
+In fact, you should make this code even more concise, by make oneliner the last two operations:
 
+    KeyValueDataSet<String, Long> wordsCount = lines.flatMap(new LineToWords()).reduce(new CountWords());
 
-
-
+Note, that all the typechecking of KeyValueDataSets and Operations Key/Value types is done Java.
 
