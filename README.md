@@ -4,10 +4,12 @@ DOH — I don't know what does it mean.
 Intro
 -------------------------
 This framework based on two main concepts: 
+
 1. KeyValueDataSet — represents the sequence file on hdfs, controls its data and provide usefull method to manipulate it
 2. Operation — operation which transform on KeyValueDataSet to another (Map-, Reduce-, or MapReduce- Job).
 
 The main goal of this framework is 
+
 1. To abstract from the Hadoop routines like: Jobs, Writables, Configuration, IO routines, etc.
 2. To handle data stored in HDFS as data-driven collection-like object rather then Path object and operate on it by high-order functions (like map and reduce).
 
@@ -87,7 +89,7 @@ Operations transform one KeyValueDataSet to another KeyValueDataSet using Hadoop
 Generally, operation take <Key,Value> (or <Key,Values> in case of reduce operation) pair from source KeyValueDataSet and transform it to one or more <Key,Value> pairs to destination KeyValueDataSet. Following operation types are available:
 
 1. [MapOp<FromKey, FromValue, ToKey, ToValue>](https://github.com/Obus/doh/blob/master/src/main/java/doh/crazy/MapOp.java) - transform key-value pair of types <FromKey, FromValue> to key-value pair of types <ToKey, ToValue>. 
-2. [ReduceOp<FromKey, FromValue, ToKey, ToValue>](https://github.com/Obus/doh/blob/master/src/main/java/doh/crazy/ReduceOp.java - transform key-values pair of type <FromKey, Iterable<FromValues>> to key-value pair of types <ToKey, ToValue>.
+2. [ReduceOp<FromKey, FromValue, ToKey, ToValue>](https://github.com/Obus/doh/blob/master/src/main/java/doh/crazy/ReduceOp.java)- transform key-values pair of type <FromKey, Iterable<FromValues>> to key-value pair of types <ToKey, ToValue>.
 3. [FlatMapOp<FromKey, FromValue, ToKey, ToValue>](https://github.com/Obus/doh/blob/master/src/main/java/doh/crazy/FlatMapOp.java) - transform key-value pair of types <FromKey, FromValue> to several key-value pairs of types <ToKey, ToValue>. 
 
 
