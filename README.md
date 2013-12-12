@@ -74,3 +74,24 @@ In fact, you should make this code even more concise, by make oneliner the last 
 
 Note, that all the typechecking of KeyValueDataSets and Operations Key/Value types is done Java.
 
+
+KeyValueDataSet
+-------------------------
+KeyValueDataSet holds path which corresponds to directory with some sequencefiles in it.
+It provides several usefull operations which can do to kind of things: get some information about it or create new KeyValueDataSet by applying some operation on it. Only MapReduce-based operations are supported at the moment.
+For precise information about available methods take look at [KeyValueDataSet.class](https://github.com/Obus/doh/blob/master/src/main/java/doh/ds/KeyValueDataSet.java). 
+
+Operations
+-------------------------
+Operations transform one KeyValueDataSet to another KeyValueDataSet using Hadoop MapReduce. Operations are represented by [Op.class](https://github.com/Obus/doh/blob/master/src/main/java/doh/crazy/Op.java). 
+Generally, operation take <Key,Value> (or <Key,Values> in case of reduce operation) pair from source KeyValueDataSet and transform it to one or more <Key,Value> pairs to destination KeyValueDataSet. Following operation types are available:
+
+1. [MapOp<FromKey, FromValue, ToKey, ToValue>](https://github.com/Obus/doh/blob/master/src/main/java/doh/crazy/MapOp.java) - transform key-value pair of types <FromKey, FromValue> to key-value pair of types <ToKey, ToValue>. 
+2. [ReduceOp<FromKey, FromValue, ToKey, ToValue>](https://github.com/Obus/doh/blob/master/src/main/java/doh/crazy/ReduceOp.java - transform key-values pair of type <FromKey, Iterable<FromValues>> to key-value pair of types <ToKey, ToValue>.
+3. [FlatMapOp<FromKey, FromValue, ToKey, ToValue>](https://github.com/Obus/doh/blob/master/src/main/java/doh/crazy/FlatMapOp.java) - transform key-value pair of types <FromKey, FromValue> to several key-value pairs of types <ToKey, ToValue>. 
+
+
+
+
+
+
