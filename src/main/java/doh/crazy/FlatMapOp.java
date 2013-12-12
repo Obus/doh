@@ -10,7 +10,9 @@ public abstract class FlatMapOp<FromKey, FromValue, ToKey, ToValue>
 
     @Override
     public Iterable<KV<ToKey, ToValue>> apply(KV<FromKey, FromValue> f) {
-        return flatMap(f.key, f.value);
+        kvList.clear();
+        flatMap(f.key, f.value);
+        return kvList;
     }
 
     @Override
@@ -18,12 +20,17 @@ public abstract class FlatMapOp<FromKey, FromValue, ToKey, ToValue>
         return new KV<ToKey, ToValue>().set(toKey, toValue);
     }
 
-    protected List<KV<ToKey, ToValue>> newList() {
-        if (!kvList.isEmpty()) {
-            kvList.clear();
-        }
-        return kvList;
+    protected void emitKeyValue(ToKey key, ToValue value) {
+        kvList.add(keyValue(key, value));
     }
-    public abstract Iterable<KV<ToKey, ToValue>> flatMap(FromKey key, FromValue value);
+
+//    protected List<KV<ToKey, ToValue>> newList() {
+//        if (!kvList.isEmpty()) {
+//            kvList.clear();
+//        }
+//        return kvList;
+//    }
+
+    public abstract void flatMap(FromKey key, FromValue value);
 
 }
