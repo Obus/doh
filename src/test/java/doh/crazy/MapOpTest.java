@@ -1,6 +1,6 @@
 package doh.crazy;
 
-import doh.ds.KeyValueDataSet;
+import doh.ds.RealKVDataSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -112,9 +112,9 @@ public class MapOpTest {
 
         writer.close();
 
-        KeyValueDataSet<Long, String> csv = new KeyValueDataSet<Long, String>(input);
+        RealKVDataSet<Long, String> csv = new RealKVDataSet<Long, String>(input);
         csv.setContext(context);
-        KeyValueDataSet<String, Integer> res = csv.map(new SimpleParametrizedMapOp(3));
+        RealKVDataSet<String, Integer> res = csv.map(new SimpleParametrizedMapOp(3));
 
         // Path resData = ;
         FileSystem fs = res.getPath().getFileSystem(conf);

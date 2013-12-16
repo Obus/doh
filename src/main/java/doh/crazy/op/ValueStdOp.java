@@ -3,11 +3,11 @@ package doh.crazy.op;
 import com.synqera.bigkore.model.fact.Consumer;
 import doh.crazy.OpParameter;
 import doh.crazy.ValueOnlyReduceOp;
-import doh.ds.MapKeyValueDataSet;
+import doh.ds.MapKVDataSet;
 
 public class ValueStdOp<Key> extends ValueOnlyReduceOp<Key, Long, Double> {
     @OpParameter
-    public MapKeyValueDataSet<Key, Double> keysAvg;
+    public MapKVDataSet<Key, Double> keysAvg;
 
     @Override
     public Double reduceValue(Key key, Iterable<Long> values) {

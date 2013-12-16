@@ -1,6 +1,6 @@
 package doh.crazy;
 
-import doh.ds.KeyValueDataSet;
+import doh.ds.RealKVDataSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -33,9 +33,9 @@ public class WordCountExample {
         Configuration conf = new Configuration();
         Path input = new Path(args[0]);
         Path tempDir = new Path(args[1]);
-        KeyValueDataSet<Long, String> lines = KeyValueDataSet.create(Context.create(conf, tempDir), input);
-        KeyValueDataSet<String, Long> words = lines.flatMap(new LineToWords());
-        KeyValueDataSet<String, Long> wordsCount = words.reduce(new CountWords());
+        RealKVDataSet<Long, String> lines = RealKVDataSet.create(Context.create(conf, tempDir), input);
+        RealKVDataSet<String, Long> words = lines.flatMap(new LineToWords());
+        RealKVDataSet<String, Long> wordsCount = words.reduce(new CountWords());
     }
 
 }

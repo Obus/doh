@@ -6,7 +6,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -16,26 +15,36 @@ import org.apache.mahout.common.Pair;
 import org.apache.mahout.common.iterator.sequencefile.SequenceFileDirIterator;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import static doh.crazy.WritableObjectDictionaryFactory.getObjectClass;
-import static doh.crazy.WritableObjectDictionaryFactory.getWritable;
 import static doh.crazy.WritableObjectDictionaryFactory.getWritableClass;
 
-public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> implements Iterable<KV<KEY, VALUE>> {
-    public KeyValueDataSet(Path path) {
-        super(path);
+public class RealKVDataSet<KEY, VALUE> implements KVDataSet<KEY,VALUE> {
+    protected final Path path;
+    protected Context context;
+
+    public RealKVDataSet(Path path) {
+        this.path = path;
     }
 
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    @Override
+    public Path getPath() {
+        return path;
+    }
+
+    @Override
     public Iterator<KV<KEY, VALUE>> iteratorChecked() throws IOException {
         return new KeyValueIterator();
     }
 
-    public MapKeyValueDataSet<KEY, VALUE> toMapKVDS() {
-        MapKeyValueDataSet<KEY, VALUE> mapKVDS = new MapKeyValueDataSet<KEY, VALUE>(getPath());
+    @Override
+    public MapKVDataSet<KEY, VALUE> toMapKVDS() {
+        MapKVDataSet<KEY, VALUE> mapKVDS = new MapKVDataSet<KEY, VALUE>(getPath());
         mapKVDS.setContext(context);
         return mapKVDS;
     }
@@ -64,12 +73,12 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
     }
 
 
-    public <KEY, VALUE, BKEY, BVALUE, TKEY, TVALUE> KeyValueDataSet<TKEY, TVALUE> mapReduce(
+    public <KEY, VALUE, BKEY, BVALUE, TKEY, TVALUE> RealKVDataSet<TKEY, TVALUE> mapReduce(
             MapOp<KEY, VALUE, BKEY, BVALUE> mapOp,
             ReduceOp<BKEY, BVALUE, TKEY, TVALUE> reduceOp
     ) throws Exception {
 
-        Configuration conf = this.getConf();
+        Configuration conf = this.context.getConf();
         Path input = this.getPath();
         Path output = context.nextTempPath();
 
@@ -91,11 +100,12 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
     }
 
 
-    public <KEY, VALUE, TKEY, TVALUE> KeyValueDataSet<TKEY, TVALUE> map(
+    @Override
+    public <KEY, VALUE, TKEY, TVALUE> RealKVDataSet<TKEY, TVALUE> map(
             MapOp<KEY, VALUE, TKEY, TVALUE> mapOp
     ) throws Exception {
 
-        Configuration conf = this.getConf();
+        Configuration conf = this.context.getConf();
         Path input = this.getPath();
         Path output = context.nextTempPath();
 
@@ -114,11 +124,12 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
     }
 
 
-    public <KEY, VALUE, TKEY, TVALUE> KeyValueDataSet<TKEY, TVALUE> flatMap(
+    @Override
+    public <KEY, VALUE, TKEY, TVALUE> RealKVDataSet<TKEY, TVALUE> flatMap(
             FlatMapOp<KEY, VALUE, TKEY, TVALUE> flatMapOp
     ) throws Exception {
 
-        Configuration conf = this.getConf();
+        Configuration conf = this.context.getConf();
         Path input = this.getPath();
         Path output = context.nextTempPath();
 
@@ -137,11 +148,12 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
     }
 
 
-    public <KEY, VALUE, TKEY, TVALUE> KeyValueDataSet<TKEY, TVALUE> reduce(
+    @Override
+    public <KEY, VALUE, TKEY, TVALUE> RealKVDataSet<TKEY, TVALUE> reduce(
             ReduceOp<KEY, VALUE, TKEY, TVALUE> reduceOp
     ) throws Exception {
 
-        Configuration conf = this.getConf();
+        Configuration conf = this.context.getConf();
         Path input = this.getPath();
         Path output = context.nextTempPath();
 
@@ -210,6 +222,7 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
 
 
 
+    @Override
     public Class<?> writableKeyClass() throws IOException {
         Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
         SequenceFile.Reader r
@@ -217,6 +230,7 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
         return r.getKeyClass();
     }
 
+    @Override
     public Class<?> writableValueClass() throws IOException{
         Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
         SequenceFile.Reader r
@@ -224,10 +238,12 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
         return r.getValueClass();
     }
 
+    @Override
     public Class<KEY> keyClass() throws IOException {
         return getObjectClass((Class<? extends Writable>) this.writableKeyClass());
     }
 
+    @Override
     public Class<VALUE> valueClass() throws IOException{
         return getObjectClass((Class<? extends Writable>) this.writableValueClass());
     }
@@ -241,7 +257,7 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
             sequenceFileDirIterator = new SequenceFileDirIterator(
                     PlatformUtils.listOutputFiles(context.getConf(), getPath()),
                     false,
-                    getConf());
+                    context.getConf());
             keyDictionary = WritableObjectDictionaryFactory.createDictionary(keyClass());
             valueDictionary = WritableObjectDictionaryFactory.createDictionary(valueClass());
         }
@@ -269,8 +285,8 @@ public class KeyValueDataSet<KEY, VALUE> extends DataSet<KV<KEY, VALUE>> impleme
     }
 
 
-    public static <KEY, VALUE> KeyValueDataSet<KEY, VALUE> create(Context context, Path path) {
-        KeyValueDataSet<KEY, VALUE> kvds = new KeyValueDataSet<KEY, VALUE>(path);
+    public static <KEY, VALUE> RealKVDataSet<KEY, VALUE> create(Context context, Path path) {
+        RealKVDataSet<KEY, VALUE> kvds = new RealKVDataSet<KEY, VALUE>(path);
         kvds.setContext(context);
         return kvds;
     }

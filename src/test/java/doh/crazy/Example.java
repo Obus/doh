@@ -5,8 +5,8 @@ import com.synqera.bigkore.model.fact.Consumer;
 import com.synqera.bigkore.model.fact.Payment;
 import com.synqera.bigkore.model.fact.Product;
 import com.synqera.bigkore.model.fact.Time;
-import doh.ds.KeyValueDataSet;
-import doh.ds.MapKeyValueDataSet;
+import doh.ds.RealKVDataSet;
+import doh.ds.MapKVDataSet;
 import doh.ds.RawUserStories;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -30,13 +30,13 @@ public class Example {
     public void testExample() throws Exception {
         RawUserStories rawUS = make();
 
-        KeyValueDataSet<Consumer, Long> consumerPayments
+        RealKVDataSet<Consumer, Long> consumerPayments
                 = rawUS.flatMap(rawUserStoryToConsumerPayments());
 
-        MapKeyValueDataSet<Consumer, Double> consumerPaymentsAvg
+        MapKVDataSet<Consumer, Double> consumerPaymentsAvg
                 = consumerPayments.reduce(valuesAvg()).toMapKVDS();
 
-        KeyValueDataSet<Consumer, Double> consumerPaymentsStd
+        RealKVDataSet<Consumer, Double> consumerPaymentsStd
                 = consumerPayments.reduce(valuesStd(consumerPaymentsAvg));
 
         for (KV<Consumer, Double> kv : consumerPaymentsStd) {

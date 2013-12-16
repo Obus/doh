@@ -1,6 +1,6 @@
 package doh.crazy;
 
-import doh.ds.KeyValueDataSet;
+import doh.ds.RealKVDataSet;
 import org.apache.hadoop.io.Writable;
 
 public class ClassUtils {
@@ -21,6 +21,6 @@ public class ClassUtils {
         return clazz.equals(Double.class);
     }
     public static boolean isKeyValueDataSet(Class clazz) {
-        return KeyValueDataSet.class.isAssignableFrom(clazz);
+        return RealKVDataSet.class.isAssignableFrom(clazz);
     }
 }

@@ -1,6 +1,6 @@
 package doh.crazy;
 
-import doh.ds.KeyValueDataSet;
+import doh.ds.RealKVDataSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
@@ -52,7 +52,7 @@ public class OpFieldSerializer {
             return (T) s;
         }
         if (isKeyValueDataSet(clazz)) {
-            return (T) loadKVDS(conf, paramName, (Class<? extends KeyValueDataSet>) clazz);
+            return (T) loadKVDS(conf, paramName, (Class<? extends RealKVDataSet>) clazz);
         }
         throw new IllegalArgumentException();
     }
@@ -74,22 +74,22 @@ public class OpFieldSerializer {
             conf.set(paramName, value.toString());
             return;
         }
-        if (value instanceof KeyValueDataSet) {
-            saveKVDS(conf, paramName, (KeyValueDataSet) value);
+        if (value instanceof RealKVDataSet) {
+            saveKVDS(conf, paramName, (RealKVDataSet) value);
             return;
         }
         throw new IllegalArgumentException("Unsupported parameter class: " + value.getClass());
     }
 
 
-    public static <T extends KeyValueDataSet> void saveKVDS(Configuration conf, String paramName, T value)
+    public static <T extends RealKVDataSet> void saveKVDS(Configuration conf, String paramName, T value)
             throws Exception {
         Path path = value.getPath();
         String paramValue = path.toString();
         conf.set(paramName, paramValue);
     }
 
-    public static <T extends KeyValueDataSet> T loadKVDS(Configuration conf, String paramName, Class<T> clazz)
+    public static <T extends RealKVDataSet> T loadKVDS(Configuration conf, String paramName, Class<T> clazz)
             throws Exception {
         String paramValue = conf.get(paramName);
         Path dsPath = new Path(paramValue);

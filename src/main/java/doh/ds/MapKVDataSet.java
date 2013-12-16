@@ -6,11 +6,11 @@ import org.apache.hadoop.fs.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MapKeyValueDataSet<KEY, VALUE> extends KeyValueDataSet<KEY, VALUE> {
+public class MapKVDataSet<KEY, VALUE> extends RealKVDataSet<KEY, VALUE> {
 
     private Map<KEY, VALUE> inMemoryMap;
 
-    public MapKeyValueDataSet(Path path) {
+    public MapKVDataSet(Path path) {
         super(path);
     }
 
