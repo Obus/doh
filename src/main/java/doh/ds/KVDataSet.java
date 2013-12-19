@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public interface KVDataSet<KEY, VALUE> extends Iterable<KV<KEY, VALUE>>, DataSet<KV<KEY, VALUE>> {
+
     Iterator<KV<KEY, VALUE>> iteratorChecked() throws IOException;
 
     MapKVDataSet<KEY, VALUE> toMapKVDS();
@@ -19,15 +20,15 @@ public interface KVDataSet<KEY, VALUE> extends Iterable<KV<KEY, VALUE>>, DataSet
 
     <TORIGIN> DataSet<TORIGIN> apply(Op<KV<KEY, VALUE>, TORIGIN> op) throws Exception;
 
-    <KEY, VALUE, TKEY, TVALUE> KVDataSet<TKEY, TVALUE> map(
+    <TKEY, TVALUE> KVDataSet<TKEY, TVALUE> map(
             MapOp<KEY, VALUE, TKEY, TVALUE> mapOp
     ) throws Exception;
 
-    <KEY, VALUE, TKEY, TVALUE> KVDataSet<TKEY, TVALUE> flatMap(
+    <TKEY, TVALUE> KVDataSet<TKEY, TVALUE> flatMap(
             FlatMapOp<KEY, VALUE, TKEY, TVALUE> flatMapOp
     ) throws Exception;
 
-    <KEY, VALUE, TKEY, TVALUE> KVDataSet<TKEY, TVALUE> reduce(
+    <TKEY, TVALUE> KVDataSet<TKEY, TVALUE> reduce(
             ReduceOp<KEY, VALUE, TKEY, TVALUE> reduceOp
     ) throws Exception;
 

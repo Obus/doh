@@ -11,8 +11,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.mahout.common.Pair;
-import org.apache.mahout.common.iterator.sequencefile.SequenceFileDirIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -20,9 +18,10 @@ import java.util.Iterator;
 import static doh.crazy.WritableObjectDictionaryFactory.getObjectClass;
 import static doh.crazy.WritableObjectDictionaryFactory.getWritableClass;
 
-public class RealKVDataSet<KEY, VALUE> implements KVDataSet<KEY,VALUE> {
+public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     protected final Path path;
     protected Context context;
+
 
     public RealKVDataSet(Path path) {
         this.path = path;
@@ -38,19 +37,19 @@ public class RealKVDataSet<KEY, VALUE> implements KVDataSet<KEY,VALUE> {
     }
 
     @Override
-    public Iterator<KV<KEY, VALUE>> iteratorChecked() throws IOException {
-        return new KeyValueIterator();
+    public Iterator<KV<Key, Value>> iteratorChecked() throws IOException {
+        return new KeyValueIterator(context.getConf(), getPath(), keyClass(), valueClass());
     }
 
     @Override
-    public MapKVDataSet<KEY, VALUE> toMapKVDS() {
-        MapKVDataSet<KEY, VALUE> mapKVDS = new MapKVDataSet<KEY, VALUE>(getPath());
+    public MapKVDataSet<Key, Value> toMapKVDS() {
+        MapKVDataSet<Key, Value> mapKVDS = new MapKVDataSet<Key, Value>(getPath());
         mapKVDS.setContext(context);
         return mapKVDS;
     }
 
     @Override
-    public Iterator<KV<KEY, VALUE>> iterator() {
+    public Iterator<KV<Key, Value>> iterator() {
         try {
             return iteratorChecked();
         } catch (IOException e) {
@@ -59,23 +58,32 @@ public class RealKVDataSet<KEY, VALUE> implements KVDataSet<KEY,VALUE> {
     }
 
     @Override
-    public <TORIGIN> DataSet<TORIGIN> apply(Op<KV<KEY, VALUE>, TORIGIN> op) throws Exception {
-        if (op instanceof MapOp) {
-            return map((MapOp) op);
-        }
-        else if (op instanceof FlatMapOp) {
-            return flatMap((FlatMapOp) op);
-        }
-        else if (op instanceof ReduceOp) {
-            return reduce((ReduceOp) op);
+    public <TORIGIN> DataSet<TORIGIN> apply(Op<KV<Key, Value>, TORIGIN> op) throws Exception {
+        if (op instanceof KVOp) {
+            return applyMR((KVOp) op);
         }
         throw new IllegalArgumentException("Unsupported operation type " + op.getClass());
     }
+    
+    protected <KEY, VALUE, ToKey, ToValue> RealKVDataSet<ToKey, ToValue> applyMR(
+            KVOp<KEY, VALUE, ToKey, ToValue> KVOp) throws Exception {
+        if (KVOp instanceof MapOp) {
+            return map((MapOp) KVOp);
+        }
+        else if (KVOp instanceof FlatMapOp) {
+            return flatMap((FlatMapOp) KVOp);
+        }
+        else if (KVOp instanceof ReduceOp) {
+            return reduce((ReduceOp) KVOp);
+        }
+        throw new IllegalArgumentException("Unsupported map-reduce operation type " + KVOp.getClass());
+    }
 
 
-    public <KEY, VALUE, BKEY, BVALUE, TKEY, TVALUE> RealKVDataSet<TKEY, TVALUE> mapReduce(
-            MapOp<KEY, VALUE, BKEY, BVALUE> mapOp,
-            ReduceOp<BKEY, BVALUE, TKEY, TVALUE> reduceOp
+    @Deprecated
+    public <BKEY, BVALUE, ToKey, ToValue> RealKVDataSet<ToKey, ToValue> mapReduce(
+            MapOp<Key, Value, BKEY, BVALUE> mapOp,
+            ReduceOp<BKEY, BVALUE, ToKey, ToValue> reduceOp
     ) throws Exception {
 
         Configuration conf = this.context.getConf();
@@ -101,8 +109,8 @@ public class RealKVDataSet<KEY, VALUE> implements KVDataSet<KEY,VALUE> {
 
 
     @Override
-    public <KEY, VALUE, TKEY, TVALUE> RealKVDataSet<TKEY, TVALUE> map(
-            MapOp<KEY, VALUE, TKEY, TVALUE> mapOp
+    public <ToKey, ToValue> RealKVDataSet<ToKey, ToValue> map(
+            MapOp<Key, Value, ToKey, ToValue> mapOp
     ) throws Exception {
 
         Configuration conf = this.context.getConf();
@@ -125,8 +133,8 @@ public class RealKVDataSet<KEY, VALUE> implements KVDataSet<KEY,VALUE> {
 
 
     @Override
-    public <KEY, VALUE, TKEY, TVALUE> RealKVDataSet<TKEY, TVALUE> flatMap(
-            FlatMapOp<KEY, VALUE, TKEY, TVALUE> flatMapOp
+    public <ToKey, ToValue> RealKVDataSet<ToKey, ToValue> flatMap(
+            FlatMapOp<Key, Value, ToKey, ToValue> flatMapOp
     ) throws Exception {
 
         Configuration conf = this.context.getConf();
@@ -149,8 +157,8 @@ public class RealKVDataSet<KEY, VALUE> implements KVDataSet<KEY,VALUE> {
 
 
     @Override
-    public <KEY, VALUE, TKEY, TVALUE> RealKVDataSet<TKEY, TVALUE> reduce(
-            ReduceOp<KEY, VALUE, TKEY, TVALUE> reduceOp
+    public <ToKey, ToValue> RealKVDataSet<ToKey, ToValue> reduce(
+            ReduceOp<Key, Value, ToKey, ToValue> reduceOp
     ) throws Exception {
 
         Configuration conf = this.context.getConf();
@@ -239,49 +247,13 @@ public class RealKVDataSet<KEY, VALUE> implements KVDataSet<KEY,VALUE> {
     }
 
     @Override
-    public Class<KEY> keyClass() throws IOException {
+    public Class<Key> keyClass() throws IOException {
         return getObjectClass((Class<? extends Writable>) this.writableKeyClass());
     }
 
     @Override
-    public Class<VALUE> valueClass() throws IOException{
+    public Class<Value> valueClass() throws IOException{
         return getObjectClass((Class<? extends Writable>) this.writableValueClass());
-    }
-
-    public class KeyValueIterator implements Iterator<KV<KEY, VALUE>> {
-        private final SequenceFileDirIterator sequenceFileDirIterator;
-        private final WritableObjectDictionaryFactory.WritableObjectDictionary<KEY, Writable> keyDictionary;
-        private final WritableObjectDictionaryFactory.WritableObjectDictionary<VALUE, Writable> valueDictionary;
-
-        public KeyValueIterator() throws IOException {
-            sequenceFileDirIterator = new SequenceFileDirIterator(
-                    PlatformUtils.listOutputFiles(context.getConf(), getPath()),
-                    false,
-                    context.getConf());
-            keyDictionary = WritableObjectDictionaryFactory.createDictionary(keyClass());
-            valueDictionary = WritableObjectDictionaryFactory.createDictionary(valueClass());
-        }
-
-        @Override
-        public boolean hasNext() {
-            return sequenceFileDirIterator.hasNext();
-        }
-
-        @Override
-        public KV<KEY, VALUE> next() {
-            Pair<Writable, Writable> pairOfWritables = (Pair<Writable, Writable>) sequenceFileDirIterator.next();
-            return kv.set(
-                    keyDictionary.getObject(pairOfWritables.getFirst()),
-                    valueDictionary.getObject(pairOfWritables.getSecond())
-            );
-        }
-
-        private final KV<KEY, VALUE> kv = new KV<KEY, VALUE>();
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
     }
 
 

@@ -8,7 +8,6 @@ import doh.crazy.FlatMapOp;
 import doh.crazy.KV;
 import org.apache.hadoop.io.BytesWritable;
 
-import java.util.List;
 
 public class RawUSToConsumerPaymentsOp extends FlatMapOp<BytesWritable, String, Consumer, Long> {
     private static final UserStory us = new UserStory();

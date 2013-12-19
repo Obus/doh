@@ -4,15 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class FlatMapOp<FromKey, FromValue, ToKey, ToValue>
-        extends MapReduceOp<FromKey, FromValue, ToKey, ToValue>
-        implements Op<KV<FromKey, FromValue>, Iterable<KV<ToKey, ToValue>>>{
+        extends KVOp<FromKey, FromValue, ToKey, ToValue> {
     private final List<KV<ToKey, ToValue>> kvList = new ArrayList<doh.crazy.KV<ToKey, ToValue>>();
 
+
     @Override
-    public Iterable<KV<ToKey, ToValue>> apply(KV<FromKey, FromValue> f) {
+    public Some<KV<ToKey, ToValue>> apply(Some<KV<FromKey, Some<FromValue>>> f) {
         kvList.clear();
-        flatMap(f.key, f.value);
-        return kvList;
+        if (f.isOne()) {
+            One<KV<FromKey, Some<FromValue>>> one = (One<KV<FromKey, Some<FromValue>>>) f;
+            if (one.get().value.isOne()) {
+                FromKey fk = one.get().key;
+                FromValue fv = ((One<FromValue>) one.get().value).get();
+                flatMap(fk, fv);
+                return many(kvList);
+            }
+        }
+        throw new UnsupportedOperationException();
     }
 
     public List<KV<ToKey, ToValue>> getKvList() {

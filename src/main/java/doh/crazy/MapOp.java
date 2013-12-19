@@ -2,13 +2,20 @@ package doh.crazy;
 
 
 public abstract class MapOp<FromKey, FromValue, ToKey, ToValue>
-        extends MapReduceOp<FromKey, FromValue, ToKey, ToValue>
-        implements Op<KV<FromKey, FromValue>, KV<ToKey, ToValue>>{
+        extends FlatMapOp<FromKey, FromValue, ToKey, ToValue> {
     protected final KV<ToKey, ToValue> kv = new KV<ToKey, ToValue>();
 
     @Override
-    public KV<ToKey, ToValue> apply(KV<FromKey, FromValue> f) {
-        return map(f.key, f.value);
+    public Some<KV<ToKey, ToValue>> apply(Some<KV<FromKey, Some<FromValue>>> f) {
+        if (f.isOne()) {
+            One<KV<FromKey, Some<FromValue>>> one = (One<KV<FromKey, Some<FromValue>>>) f;
+            if (one.get().value.isOne()) {
+                FromKey fk = one.get().key;
+                FromValue fv = ((One<FromValue>) one.get().value).get();
+                return one(map(fk, fv));
+            }
+        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -17,6 +24,8 @@ public abstract class MapOp<FromKey, FromValue, ToKey, ToValue>
     }
 
     public abstract KV<ToKey, ToValue> map(FromKey key, FromValue value);
+
+
 
 
 }
