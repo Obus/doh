@@ -1,10 +1,10 @@
 package doh.ds;
 
-import doh.crazy.FlatMapOp;
-import doh.crazy.KV;
-import doh.crazy.MapOp;
-import doh.crazy.Op;
-import doh.crazy.ReduceOp;
+import doh.op.Op;
+import doh.op.kvop.FlatMapOp;
+import doh.op.kvop.KV;
+import doh.op.kvop.MapOp;
+import doh.op.kvop.ReduceOp;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -14,6 +14,8 @@ public interface KVDataSet<KEY, VALUE> extends Iterable<KV<KEY, VALUE>>, DataSet
     Iterator<KV<KEY, VALUE>> iteratorChecked() throws IOException;
 
     MapKVDataSet<KEY, VALUE> toMapKVDS();
+
+    boolean isReady();
 
     @Override
     Iterator<KV<KEY, VALUE>> iterator();

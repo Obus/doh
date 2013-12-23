@@ -1,20 +1,21 @@
 package doh.ds;
 
-import doh.crazy.FlatMapOp;
-import doh.crazy.KV;
-import doh.crazy.KVOp;
-import doh.crazy.MapOp;
-import doh.crazy.Op;
-import doh.crazy.ReduceOp;
+import com.google.common.collect.Lists;
+import doh.op.Op;
+import doh.op.kvop.*;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.mahout.common.Pair;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class LazyKVDataSet<Key, Value, FromKey, FromValue> implements KVDataSet<Key, Value>  {
+import static doh.op.KVOpJobUtils.configureJob;
+
+public class LazyKVDataSet<Key, Value, FromKey, FromValue> implements KVDataSet<Key, Value> {
 
     protected final LazyKVDataSet<FromKey, FromValue, ?, ?> parentDataSet;
     protected final KVOp<FromKey, FromValue, Key, Value> parentOperation;
@@ -29,7 +30,7 @@ public class LazyKVDataSet<Key, Value, FromKey, FromValue> implements KVDataSet<
     protected synchronized RealKVDataSet<Key, Value> real() {
         if (real == null) {
             try {
-                real = parentDataSet.real().applyMR(parentOperation);
+                beReady();//real = parentDataSet.real().applyMR(parentOperation);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -37,19 +38,47 @@ public class LazyKVDataSet<Key, Value, FromKey, FromValue> implements KVDataSet<
         return real;
     }
 
-    public boolean isBackedByReal() {
+    public boolean isReady() {
         return real != null;
     }
 
+    protected void beReady() throws Exception {
+        Iterator<Pair<LazyKVDataSet, KVOp>> ancestorsIt = ancestors().iterator();
+        List<KVOneOp> oneOpSequence = new ArrayList<KVOneOp>();
+        while (ancestorsIt.hasNext()) {
+            Pair<LazyKVDataSet, KVOp> p = ancestorsIt.next();
+            if (p.getSecond() instanceof KVOneOp) {
+                oneOpSequence.add((KVOneOp) p.getSecond());
+            } else if (p.getSecond() instanceof ReduceOp) {
+                final Job job;
+                if (oneOpSequence.isEmpty()) {
+                    job = configureJob((ReduceOp) p.getSecond());
+                } else {
+                    job = configureJob(new FlatSequenceOp(oneOpSequence), (ReduceOp) p.getSecond());
+                }
+            } else {
+                throw new IllegalArgumentException("Unknown KV operation type: "
+                        + p.getSecond().getClass());
+            }
 
-    public static void collapse() {
+        }
+    }
 
+
+    protected List<Pair<LazyKVDataSet, KVOp>> ancestors() {
+        List<Pair<LazyKVDataSet, KVOp>> ancestors = Lists.newArrayList();
+        LazyKVDataSet current = this;
+        while (!current.isReady()) {
+            ancestors.add(0, new Pair<LazyKVDataSet, KVOp>(current.getParentDataSet(), current.getParentOperation()));
+            current = current.getParentDataSet();
+        }
+        return ancestors;
     }
 
     protected Pair<LazyKVDataSet, List<KVOp>> originAndPathFromOrigin() {
         List<KVOp> pathFromOrigin = new LinkedList<KVOp>();
         LazyKVDataSet current = this;
-        while (!current.isBackedByReal()) {
+        while (!current.isReady()) {
             pathFromOrigin.add(0, current.getParentOperation());
             current = current.getParentDataSet();
         }

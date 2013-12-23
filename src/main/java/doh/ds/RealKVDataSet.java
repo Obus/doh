@@ -1,7 +1,8 @@
 package doh.ds;
 
 import com.synqera.bigkore.rank.PlatformUtils;
-import doh.crazy.*;
+import doh.op.*;
+import doh.op.kvop.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
@@ -15,8 +16,8 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import java.io.IOException;
 import java.util.Iterator;
 
-import static doh.crazy.WritableObjectDictionaryFactory.getObjectClass;
-import static doh.crazy.WritableObjectDictionaryFactory.getWritableClass;
+import static doh.op.WritableObjectDictionaryFactory.getObjectClass;
+import static doh.op.WritableObjectDictionaryFactory.getWritableClass;
 
 public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     protected final Path path;
@@ -25,6 +26,11 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
     public RealKVDataSet(Path path) {
         this.path = path;
+    }
+
+    @Override
+    public boolean isReady() {
+        return true;
     }
 
     public void setContext(Context context) {
@@ -64,16 +70,14 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         }
         throw new IllegalArgumentException("Unsupported operation type " + op.getClass());
     }
-    
+
     protected <KEY, VALUE, ToKey, ToValue> RealKVDataSet<ToKey, ToValue> applyMR(
             KVOp<KEY, VALUE, ToKey, ToValue> KVOp) throws Exception {
         if (KVOp instanceof MapOp) {
             return map((MapOp) KVOp);
-        }
-        else if (KVOp instanceof FlatMapOp) {
+        } else if (KVOp instanceof FlatMapOp) {
             return flatMap((FlatMapOp) KVOp);
-        }
-        else if (KVOp instanceof ReduceOp) {
+        } else if (KVOp instanceof ReduceOp) {
             return reduce((ReduceOp) KVOp);
         }
         throw new IllegalArgumentException("Unsupported map-reduce operation type " + KVOp.getClass());
@@ -213,8 +217,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         job.setReducerClass(SimpleReduceOpReducer.class);
         if (reduceOp instanceof ValueOnlyReduceOp) {
             job.setOutputKeyClass(this.writableKeyClass());
-        }
-        else {
+        } else {
             job.setOutputKeyClass(getWritableClass(reduceOp.toKeyClass()));
         }
         job.setOutputValueClass(getWritableClass(reduceOp.toValueClass()));
@@ -229,7 +232,6 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
 
-
     @Override
     public Class<?> writableKeyClass() throws IOException {
         Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
@@ -239,7 +241,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     @Override
-    public Class<?> writableValueClass() throws IOException{
+    public Class<?> writableValueClass() throws IOException {
         Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
         SequenceFile.Reader r
                 = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
@@ -252,7 +254,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     @Override
-    public Class<Value> valueClass() throws IOException{
+    public Class<Value> valueClass() throws IOException {
         return getObjectClass((Class<? extends Writable>) this.writableValueClass());
     }
 
