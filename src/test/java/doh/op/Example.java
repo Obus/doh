@@ -6,7 +6,7 @@ import com.synqera.bigkore.model.fact.Payment;
 import com.synqera.bigkore.model.fact.Product;
 import com.synqera.bigkore.model.fact.Time;
 import doh.ds.MapKVDataSet;
-import doh.ds.RawUserStories;
+import doh.api.ds.RawUserStories;
 import doh.ds.RealKVDataSet;
 import doh.api.op.KV;
 import org.apache.hadoop.conf.Configuration;

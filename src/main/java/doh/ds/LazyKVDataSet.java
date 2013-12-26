@@ -1,7 +1,7 @@
 package doh.ds;
 
 import com.google.common.collect.Lists;
-import doh.api.KVDataSet;
+import doh.api.ds.KVDataSet;
 import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
 import doh.api.op.MapOp;

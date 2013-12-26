@@ -3,7 +3,7 @@ package doh.op;
 import com.synqera.bigkore.model.fact.Consumer;
 import doh.ds.LazyKVDataSet;
 import doh.ds.MapKVDataSet;
-import doh.ds.RawUserStories;
+import doh.api.ds.RawUserStories;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
 import org.apache.hadoop.io.BytesWritable;

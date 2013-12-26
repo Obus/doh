@@ -1,7 +1,7 @@
 package doh.ds;
 
 import com.synqera.bigkore.rank.PlatformUtils;
-import doh.api.KVDataSet;
+import doh.api.ds.KVDataSet;
 import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
@@ -9,6 +9,7 @@ import doh.api.op.ReduceOp;
 import doh.op.*;
 import doh.op.kvop.*;
 import doh.op.mr.FlatMapOpMapper;
+import doh.op.mr.KVOpJobUtils;
 import doh.op.mr.MapOpMapper;
 import doh.op.mr.ReduceOpReducer;
 import doh.op.serde.OpSerializer;
@@ -99,34 +100,6 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
             return reduce((ReduceOp) KVOp);
         }
         throw new IllegalArgumentException("Unsupported map-reduce operation type " + KVOp.getClass());
-    }
-
-
-    @Deprecated
-    public <BKEY, BVALUE, ToKey, ToValue> RealKVDataSet<ToKey, ToValue> mapReduce(
-            MapOp<Key, Value, BKEY, BVALUE> mapOp,
-            ReduceOp<BKEY, BVALUE, ToKey, ToValue> reduceOp
-    ) throws Exception {
-
-        Configuration conf = this.context.getConf();
-        Path input = this.getPath();
-        Path output = context.nextTempPath();
-
-        Job job = new Job(conf, "MapReduce job");
-        FileInputFormat.setInputPaths(job, input);
-        FileOutputFormat.setOutputPath(job, output);
-
-        setUpMapOpJob(job, mapOp);
-        job.setJobName(job.getJobName() + ".\n MapOp: " + mapOp.getClass().getSimpleName());
-
-        setUpReduceOpJob(job, reduceOp);
-        job.setJobName(job.getJobName() + ".\n ReduceOp: " + reduceOp.getClass().getSimpleName());
-
-        job.setInputFormatClass(SequenceFileInputFormat.class);
-        job.setOutputFormatClass(SequenceFileOutputFormat.class);
-        context.runJob(job);
-
-        return create(context, output);
     }
 
 
