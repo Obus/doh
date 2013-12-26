@@ -1,6 +1,11 @@
 package doh.op;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import doh.op.kvop.CompositeMapOp;
+import doh.op.kvop.CompositeReduceOp;
 import doh.op.kvop.FlatMapOp;
+import doh.op.kvop.KVOp;
 import doh.op.kvop.MapOp;
 import doh.op.kvop.ReduceOp;
 import org.apache.hadoop.conf.Configuration;
@@ -8,24 +13,132 @@ import org.apache.hadoop.conf.Configuration;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class OpSerializer {
     private static final String FLAT_MAP_PARAM_NAME = "tmp.op.flatmap";
     private static final String MAP_PARAM_NAME = "tmp.op.map";
+    private static final String COMPOSITE_MAP_PARAM_NAME = "tmp.op.composite.map";
     private static final String REDUCE_PARAM_NAME = "tmp.op.reduce";
+    private static final String COMPOSITE_REDUCE_PARAM_NAME = "tmp.op.composite.reduce";
+
+    private static final String KEY_VALUE_CLASSES_NAME = "tmp.op.keyValue.classes";
+
+    public static void saveKVClassesToConf(Configuration conf,
+                                           Class<?> mapperInputKeyClass,
+                                           Class<?> mapperInputValueClass,
+                                           Class<?> mapperOutputKeyClass,
+                                           Class<?> mapperOutputValueClass,
+                                           Class<?> reduceOutputKeyClass,
+                                           Class<?> reduceOutputValueClass) {
+        conf.set(KEY_VALUE_CLASSES_NAME,
+                        mapperInputKeyClass.getName() + "," +
+                        mapperInputValueClass.getName() + "," +
+                        mapperOutputKeyClass.getName() + "," +
+                        mapperOutputValueClass.getName() + "," +
+                        reduceOutputKeyClass.getName() + "," +
+                        reduceOutputValueClass.getName()
+        );
+    }
+    private static Class<?>[] loadKVClassesFromConf(Configuration conf) throws Exception {
+        String value = conf.get(KEY_VALUE_CLASSES_NAME);
+        Class<?>[] kvClasses = new Class<?>[6];
+        Iterator<String> it = Splitter.on(",").split(value).iterator();
+        kvClasses[0] = Class.forName(it.next());
+        kvClasses[1] = Class.forName(it.next());
+        kvClasses[2] = Class.forName(it.next());
+        kvClasses[3] = Class.forName(it.next());
+        kvClasses[4] = Class.forName(it.next());
+        kvClasses[5] = Class.forName(it.next());
+        if (it.hasNext()) {
+            throw new IllegalStateException();
+        }
+        return kvClasses;
+    }
+
+    public static Class<?> loadMapInputKeyClassFromConf(Configuration conf) throws Exception {
+        return loadKVClassesFromConf(conf)[0];
+    }
+    public static Class<?> loadMapInputValueClassFromConf(Configuration conf) throws Exception {
+        return loadKVClassesFromConf(conf)[1];
+    }
+    public static Class<?> loadMapOutputKeyClassFromConf(Configuration conf) throws Exception {
+        return loadKVClassesFromConf(conf)[2];
+    }
+    public static Class<?> loadMapOutputValueClassFromConf(Configuration conf) throws Exception {
+        return loadKVClassesFromConf(conf)[3];
+    }
+    public static Class<?> loadReduceOutputKeyClassFromConf(Configuration conf) throws Exception {
+        return loadKVClassesFromConf(conf)[4];
+    }
+    public static Class<?> loadReduceOutputValueClassFromConf(Configuration conf) throws Exception {
+        return loadKVClassesFromConf(conf)[5];
+    }
+
+
+    private static void saveObjectToConf(Configuration conf, String paramName, Object obj) throws Exception {
+        String value = WritableObjectDictionaryFactory.objectToString(obj);
+        System.out.println();
+        System.out.println();
+        System.out.println("Saving parameter: " + paramName);
+        System.out.println("Value: \n" + value);
+        conf.set(paramName, value);
+    }
+
+
+    private static Object loadObjectFromConf(Configuration conf, String paramName) throws Exception {
+        return WritableObjectDictionaryFactory.stringToObject(conf.get(paramName));
+    }
+
 
     public static <T extends MapOp> T loadMapOpFromConf(Configuration conf) throws Exception {
-        return loadOpFromConf(conf, MAP_PARAM_NAME);
+        return (T) loadObjectFromConf(conf, MAP_PARAM_NAME); //loadOpFromConf(conf, MAP_PARAM_NAME);
     }
 
     public static <T extends FlatMapOp> T loadFlatMapOpFromConf(Configuration conf) throws Exception {
-        return loadOpFromConf(conf, FLAT_MAP_PARAM_NAME);
+        return (T) loadObjectFromConf(conf, FLAT_MAP_PARAM_NAME); //loadOpFromConf(conf, FLAT_MAP_PARAM_NAME);
     }
 
     public static <T extends ReduceOp> T loadReduceOpFromConf(Configuration conf) throws Exception {
-        return loadOpFromConf(conf, REDUCE_PARAM_NAME);
+        return (T) loadObjectFromConf(conf, REDUCE_PARAM_NAME); //loadOpFromConf(conf, REDUCE_PARAM_NAME);
     }
+
+    public static <T extends MapOp> void saveMapOpToConf(Configuration conf, T op) throws Exception {
+        saveObjectToConf(conf, MAP_PARAM_NAME, op);
+//        conf.set(MAP_PARAM_NAME, op.getClass().getName());
+//        saveOpFieldsToConf(conf, op);
+    }
+
+    public static <T extends FlatMapOp> void saveFlatMapOpToConf(Configuration conf, T op) throws Exception {
+        saveObjectToConf(conf, FLAT_MAP_PARAM_NAME, op);
+//        conf.set(FLAT_MAP_PARAM_NAME, op.getClass().getName());
+//        saveOpFieldsToConf(conf, op);
+    }
+
+    public static <T extends ReduceOp> void saveReduceOpToConf(Configuration conf, T op) throws Exception {
+        saveObjectToConf(conf, REDUCE_PARAM_NAME, op);
+//        conf.set(REDUCE_PARAM_NAME, op.getClass().getName());
+//        saveOpFieldsToConf(conf, op);
+    }
+
+    public static <T extends CompositeMapOp> T loadCompositeMapOpConf(Configuration conf) throws Exception {
+        return (T) loadObjectFromConf(conf, COMPOSITE_MAP_PARAM_NAME); //throw new UnsupportedOperationException();
+    }
+
+
+    public static <T extends CompositeReduceOp> T loadCompositeReduceOpConf(Configuration conf) throws Exception {
+        return (T) loadObjectFromConf(conf, COMPOSITE_REDUCE_PARAM_NAME); //throw new UnsupportedOperationException();
+    }
+
+    public static void saveCompositeMapOp(Configuration conf, CompositeMapOp op) throws Exception {
+        saveObjectToConf(conf, COMPOSITE_MAP_PARAM_NAME, op);//throw new UnsupportedOperationException();
+    }
+
+    public static void saveCompositeReduceOp(Configuration conf, CompositeReduceOp op) throws Exception {
+        saveObjectToConf(conf, COMPOSITE_REDUCE_PARAM_NAME, op);//throw new UnsupportedOperationException();
+    }
+
 
     private static <T extends Op> T loadOpFromConf(Configuration conf, String paramName) throws Exception {
         String opClassStr = conf.get(paramName);
@@ -35,22 +148,13 @@ public class OpSerializer {
         return op;
     }
 
-    public static <T extends MapOp> void saveMapOpToConf(Configuration conf, T op) throws Exception {
-        conf.set(MAP_PARAM_NAME, op.getClass().getName());
+
+    private static <T extends KVOp> void saveSimpleOpToConf(Configuration conf, String paramName, T op) throws Exception {
+        conf.set(paramName, op.getClass().getName());
         saveOpFieldsToConf(conf, op);
     }
 
-    public static <T extends FlatMapOp> void saveFlatMapOpToConf(Configuration conf, T op) throws Exception {
-        conf.set(FLAT_MAP_PARAM_NAME, op.getClass().getName());
-        saveOpFieldsToConf(conf, op);
-    }
-
-    public static <T extends ReduceOp> void saveReduceOpToConf(Configuration conf, T op) throws Exception {
-        conf.set(REDUCE_PARAM_NAME, op.getClass().getName());
-        saveOpFieldsToConf(conf, op);
-    }
-
-    public static <T extends Op> T loadOpFieldsFromConf(Configuration conf, T op) throws Exception {
+    private static <T extends Op> T loadOpFieldsFromConf(Configuration conf, T op) throws Exception {
         Class opClass = op.getClass();
         List<Field> opParameters = opParametersAccessible(ReflectionUtils.getAllDeclaredFields(opClass));
         for (Field f : opParameters) {
@@ -59,7 +163,7 @@ public class OpSerializer {
         return op;
     }
 
-    public static <T extends Op> T saveOpFieldsToConf(Configuration conf, T op) throws Exception {
+    private static <T extends Op> T saveOpFieldsToConf(Configuration conf, T op) throws Exception {
         Class opClass = op.getClass();
         List<Field> opParameters = opParametersAccessible(ReflectionUtils.getAllDeclaredFields(opClass));
         for (Field f : opParameters) {
@@ -68,7 +172,7 @@ public class OpSerializer {
         return op;
     }
 
-    public static <T> T loadFieldFromConf(Configuration conf, T op, Field f) throws Exception {
+    private static <T> T loadFieldFromConf(Configuration conf, T op, Field f) throws Exception {
         Object value = OpFieldSerializer.load(conf, OpFieldSerializer.parameterForOpField(op, f), OpFieldSerializer.fieldClass(f));
         OpFieldSerializer.setFieldValue(op, f, value);
         return op;
@@ -85,7 +189,7 @@ public class OpSerializer {
         return opParameters;
     }
 
-    public static boolean isOpParameter(Field f) {
+    private static boolean isOpParameter(Field f) {
         Annotation[] annotations = f.getDeclaredAnnotations();
         if (annotations.length == 0) {
             return false;

@@ -22,5 +22,8 @@ public class ValueStdOp<Key> extends ValueOnlyReduceOp<Key, Long, Double> {
     }
 
     public static class ConsumerValuesStdOp extends ValueStdOp<Consumer> {
+
+        public ConsumerValuesStdOp() {
+        }
     }
 }

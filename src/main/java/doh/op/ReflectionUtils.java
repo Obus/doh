@@ -17,6 +17,10 @@ import java.util.Stack;
 public class ReflectionUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReflectionUtils.class);
 
+    public static boolean isUnknown(Class clazz) {
+        return clazz.equals(UNKNOWN_CLASS);
+    }
+
     public static Type[] getTypes(Class clazz) {
         return clazz.getTypeParameters();
     }

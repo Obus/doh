@@ -8,21 +8,7 @@ import java.util.Iterator;
 public abstract class KVOp<FromKey, FromValue, ToKey, ToValue>
         implements Op<KV<FromKey, FromValue>, KV<ToKey, ToValue>> {
 
-    public Class<FromKey> fromKeyClass() {
-        return ReflectionUtils.getFromKeyClass(getClass());
-    }
 
-    public Class<FromValue> fromValueClass() {
-        return ReflectionUtils.getFromValueClass(getClass());
-    }
-
-    public Class<ToKey> toKeyClass() {
-        return ReflectionUtils.getToKeyClass(getClass());
-    }
-
-    public Class<ToValue> toValueClass() {
-        return ReflectionUtils.getToValueClass(getClass());
-    }
 
     protected <A, B> KV<A, B> keyValue(A key, B value) {
         return new KV<A, B>().set(key, value);

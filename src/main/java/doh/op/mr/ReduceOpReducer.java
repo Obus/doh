@@ -1,5 +1,6 @@
-package doh.op;
+package doh.op.mr;
 
+import doh.op.OpSerializer;
 import doh.op.kvop.KV;
 import doh.op.kvop.ReduceOp;
 import org.apache.hadoop.io.Writable;
@@ -13,7 +14,7 @@ import static doh.op.WritableObjectDictionaryFactory.WritableObjectDictionary;
 import static doh.op.WritableObjectDictionaryFactory.createDictionary;
 
 
-public class SimpleReduceOpReducer
+public class ReduceOpReducer
         <
                 WRITABLE_FROM_KEY extends WritableComparable,
                 WRITABLE_FROM_VALUE extends Writable,

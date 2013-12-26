@@ -3,6 +3,9 @@ package doh.ds;
 import com.synqera.bigkore.rank.PlatformUtils;
 import doh.op.*;
 import doh.op.kvop.*;
+import doh.op.mr.FlatMapOpMapper;
+import doh.op.mr.MapOpMapper;
+import doh.op.mr.ReduceOpReducer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
@@ -24,6 +27,10 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     protected Context context;
 
 
+    public Context getContext() {
+        return context;
+    }
+
     public RealKVDataSet(Path path) {
         this.path = path;
     }
@@ -31,6 +38,11 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     @Override
     public boolean isReady() {
         return true;
+    }
+
+    @Override
+    public void beReady() {
+        // always ready
     }
 
     public void setContext(Context context) {
@@ -187,7 +199,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
     public void setUpMapOpJob(Job job, MapOp mapOp) throws Exception {
         OpSerializer.saveMapOpToConf(job.getConfiguration(), mapOp);
-        job.setMapperClass(SimpleMapOpMapper.class);
+        job.setMapperClass(MapOpMapper.class);
         job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setMapOutputValueClass(getWritableClass(mapOp.toValueClass()));
     }
@@ -201,7 +213,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
     public void setUpFlatMapOpJob(Job job, FlatMapOp mapOp) throws Exception {
         OpSerializer.saveFlatMapOpToConf(job.getConfiguration(), mapOp);
-        job.setMapperClass(SimpleFlatMapOpMapper.class);
+        job.setMapperClass(FlatMapOpMapper.class);
         job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setMapOutputValueClass(getWritableClass(mapOp.toValueClass()));
     }
@@ -214,7 +226,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
     public void setUpReduceOpJob(Job job, ReduceOp reduceOp) throws Exception {
         OpSerializer.saveReduceOpToConf(job.getConfiguration(), reduceOp);
-        job.setReducerClass(SimpleReduceOpReducer.class);
+        job.setReducerClass(ReduceOpReducer.class);
         if (reduceOp instanceof ValueOnlyReduceOp) {
             job.setOutputKeyClass(this.writableKeyClass());
         } else {

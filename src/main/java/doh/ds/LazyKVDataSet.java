@@ -1,8 +1,10 @@
 package doh.ds;
 
 import com.google.common.collect.Lists;
+import doh.op.Context;
 import doh.op.Op;
 import doh.op.kvop.*;
+import doh.op.mr.LazyKVDataSetReadyMaker;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.mahout.common.Pair;
@@ -13,21 +15,30 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import static doh.op.KVOpJobUtils.configureJob;
+import static doh.op.mr.KVOpJobUtils.configureJob;
 
-public class LazyKVDataSet<Key, Value, FromKey, FromValue> implements KVDataSet<Key, Value> {
+public class LazyKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
-    protected final LazyKVDataSet<FromKey, FromValue, ?, ?> parentDataSet;
-    protected final KVOp<FromKey, FromValue, Key, Value> parentOperation;
+    protected final LazyKVDataSet<?, ?> parentDataSet;
+    protected final KVOp<?, ?, Key, Value> parentOperation;
+    protected final Context context;
 
-    public LazyKVDataSet(LazyKVDataSet<FromKey, FromValue, ?, ?> parentDataSet, KVOp<FromKey, FromValue, Key, Value> parentOperation) {
+    public LazyKVDataSet(LazyKVDataSet<?, ?> parentDataSet, KVOp<?, ?, Key, Value> parentOperation, Context context) {
         this.parentDataSet = parentDataSet;
         this.parentOperation = parentOperation;
+        this.context = context;
+    }
+
+    public LazyKVDataSet(Context context, RealKVDataSet<Key, Value> real) {
+        this.parentOperation = null;
+        this.parentDataSet = null;
+        this.context = context;
+        this.real = real;
     }
 
     protected RealKVDataSet<Key, Value> real = null;
 
-    protected synchronized RealKVDataSet<Key, Value> real() {
+    public synchronized RealKVDataSet<Key, Value> real() {
         if (real == null) {
             try {
                 beReady();//real = parentDataSet.real().applyMR(parentOperation);
@@ -42,26 +53,13 @@ public class LazyKVDataSet<Key, Value, FromKey, FromValue> implements KVDataSet<
         return real != null;
     }
 
-    protected void beReady() throws Exception {
-        Iterator<Pair<LazyKVDataSet, KVOp>> ancestorsIt = ancestors().iterator();
-        List<KVOneOp> oneOpSequence = new ArrayList<KVOneOp>();
-        while (ancestorsIt.hasNext()) {
-            Pair<LazyKVDataSet, KVOp> p = ancestorsIt.next();
-            if (p.getSecond() instanceof KVOneOp) {
-                oneOpSequence.add((KVOneOp) p.getSecond());
-            } else if (p.getSecond() instanceof ReduceOp) {
-                final Job job;
-                if (oneOpSequence.isEmpty()) {
-                    job = configureJob((ReduceOp) p.getSecond());
-                } else {
-                    job = configureJob(new FlatSequenceOp(oneOpSequence), (ReduceOp) p.getSecond());
-                }
-            } else {
-                throw new IllegalArgumentException("Unknown KV operation type: "
-                        + p.getSecond().getClass());
-            }
+    public void setReal(RealKVDataSet<Key, Value> real) {
+        this.real = real;
+    }
 
-        }
+    @Override
+    public synchronized void beReady() throws Exception {
+        new LazyKVDataSetReadyMaker(this).makeItReady();
     }
 
 
@@ -86,11 +84,11 @@ public class LazyKVDataSet<Key, Value, FromKey, FromValue> implements KVDataSet<
     }
 
 
-    public LazyKVDataSet<FromKey, FromValue, ?, ?> getParentDataSet() {
+    public LazyKVDataSet<?, ?> getParentDataSet() {
         return parentDataSet;
     }
 
-    public KVOp<FromKey, FromValue, Key, Value> getParentOperation() {
+    public KVOp<?, ?, Key, Value> getParentOperation() {
         return parentOperation;
     }
 
@@ -116,24 +114,26 @@ public class LazyKVDataSet<Key, Value, FromKey, FromValue> implements KVDataSet<
 
     @Override
     public <ToKey, ToValue>
-    LazyKVDataSet<ToKey, ToValue, Key, Value> map(MapOp<Key, Value, ToKey, ToValue> mapOp)
+    LazyKVDataSet<ToKey, ToValue> map(MapOp<Key, Value, ToKey, ToValue> mapOp)
             throws Exception {
-        return new LazyKVDataSet<ToKey, ToValue, Key, Value>(this, mapOp);
+        return new LazyKVDataSet<ToKey, ToValue>(this, mapOp, context);
     }
 
     @Override
     public <ToKey, ToValue>
-    LazyKVDataSet<ToKey, ToValue, Key, Value> flatMap(FlatMapOp<Key, Value, ToKey, ToValue> flatMapOp)
+    LazyKVDataSet<ToKey, ToValue> flatMap(FlatMapOp<Key, Value, ToKey, ToValue> flatMapOp)
             throws Exception {
-        return new LazyKVDataSet<ToKey, ToValue, Key, Value>(this, flatMapOp);
+        return new LazyKVDataSet<ToKey, ToValue>(this, flatMapOp, context);
     }
 
+    // todo: Change reducer
     @Override
     public <ToKey, ToValue>
-    LazyKVDataSet<ToKey, ToValue, Key, Value> reduce(ReduceOp<Key, Value, ToKey, ToValue> reduceOp)
+    LazyKVDataSet<ToKey, ToValue> reduce(ReduceOp<Key, Value, ToKey, ToValue> reduceOp)
             throws Exception {
-        return new LazyKVDataSet<ToKey, ToValue, Key, Value>(this, reduceOp);
+        return new LazyKVDataSet<ToKey, ToValue>(this, (KVOp<Key, Value, ToKey, ToValue>)reduceOp, context);
     }
+
 
     @Override
     public Class<?> writableKeyClass() throws IOException {

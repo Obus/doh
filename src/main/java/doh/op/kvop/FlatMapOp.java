@@ -1,18 +1,37 @@
 package doh.op.kvop;
 
+import doh.op.ReflectionUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class FlatMapOp<FromKey, FromValue, ToKey, ToValue>
-        extends KVOneOp<FromKey, FromValue, ToKey, ToValue> {
-    private final List<KV<ToKey, ToValue>> kvList = new ArrayList<KV<ToKey, ToValue>>();
+        extends KVUnoOp<FromKey, FromValue, ToKey, ToValue>
+        implements OpKVTransformer<FromKey, FromValue, ToKey, ToValue> {
+
+    public Class<FromKey> fromKeyClass() {
+        return ReflectionUtils.getFromKeyClass(getClass());
+    }
+
+    public Class<FromValue> fromValueClass() {
+        return ReflectionUtils.getFromValueClass(getClass());
+    }
+
+    public Class<ToKey> toKeyClass() {
+        return ReflectionUtils.getToKeyClass(getClass());
+    }
+
+    public Class<ToValue> toValueClass() {
+        return ReflectionUtils.getToValueClass(getClass());
+    }
+
+
+    private transient final List<KV<ToKey, ToValue>> kvList = new ArrayList<KV<ToKey, ToValue>>();
 
     @Override
-    public Some<KV<ToKey, ToValue>> applyOne(KV<FromKey, FromValue> f) {
+    public Some<KV<ToKey, ToValue>> applyUno(KV<FromKey, FromValue> f) {
         kvList.clear();
-        FromKey fk = f.key;
-        FromValue fv = f.value;
-        flatMap(fk, fv);
+        flatMap(f.key, f.value);
         return many(kvList);
     }
 

@@ -1,24 +1,35 @@
 package doh.op.kvop;
 
 
+import doh.op.ReflectionUtils;
+
 public abstract class ReduceOp<FromKey, FromValue, ToKey, ToValue>
-        extends KVOp<FromKey, FromValue, ToKey, ToValue> {
+        extends KVUnoOp<FromKey, Iterable<FromValue>, ToKey, ToValue>
+        implements OpKVTransformer<FromKey, FromValue, ToKey, ToValue> {
 
-    protected final KV<ToKey, ToValue> kv = new KV<ToKey, ToValue>();
 
-    @Override
-    public Some<KV<ToKey, ToValue>> apply(Some<KV<FromKey, Some<FromValue>>> f) {
-        if (f.isOne()) {
-            One<KV<FromKey, Some<FromValue>>> one = (One<KV<FromKey, Some<FromValue>>>) f;
-            if (one.get().value.isMany()) {
-                FromKey fk = one.get().key;
-                Iterable<FromValue> fv = one.get().value;
-                return one(reduce(fk, fv));
-            }
-        }
-        throw new UnsupportedOperationException();
+    public Class<FromKey> fromKeyClass() {
+        return ReflectionUtils.getFromKeyClass(getClass());
     }
 
+    public Class<FromValue> fromValueClass() {
+        return ReflectionUtils.getFromValueClass(getClass());
+    }
+
+    public Class<ToKey> toKeyClass() {
+        return ReflectionUtils.getToKeyClass(getClass());
+    }
+
+    public Class<ToValue> toValueClass() {
+        return ReflectionUtils.getToValueClass(getClass());
+    }
+
+    protected transient final KV<ToKey, ToValue> kv = new KV<ToKey, ToValue>();
+
+    @Override
+    public Some<KV<ToKey, ToValue>> applyUno(KV<FromKey, Iterable<FromValue>> f) {
+        return one(reduce(f.key, f.value));
+    }
 
     public abstract KV<ToKey, ToValue> reduce(FromKey key, Iterable<FromValue> values);
 

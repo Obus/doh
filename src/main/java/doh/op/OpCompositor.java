@@ -1,7 +1,7 @@
 package doh.op;
 
-import doh.op.kvop.FlatSequenceOp;
-import doh.op.kvop.KVOneOp;
+import doh.op.kvop.CompositeMapOp;
+import doh.op.kvop.KVUnoOp;
 import doh.op.kvop.KVOp;
 import doh.op.kvop.ReduceOp;
 
@@ -12,21 +12,21 @@ public class OpCompositor {
 
     public List<KVOp> compose(List<KVOp> opList) throws Exception {
         List<KVOp> composedOpList = new ArrayList<KVOp>();
-        List<KVOneOp> currentCompositionOpList = new ArrayList<KVOneOp>();
+        List<KVUnoOp> currentCompositionOpList = new ArrayList<KVUnoOp>();
         for (KVOp op : opList) {
             if (op instanceof ReduceOp) {
                 if (currentCompositionOpList.size() > 0) {
-                    composedOpList.add(new FlatSequenceOp(currentCompositionOpList));
-                    currentCompositionOpList = new ArrayList<KVOneOp>();
+                    composedOpList.add(new CompositeMapOp(currentCompositionOpList));
+                    currentCompositionOpList = new ArrayList<KVUnoOp>();
                 }
-            } else if (op instanceof KVOneOp) {
-                currentCompositionOpList.add((KVOneOp) op);
+            } else if (op instanceof KVUnoOp) {
+                currentCompositionOpList.add((KVUnoOp) op);
             } else {
                 throw new IllegalArgumentException();
             }
         }
         if (currentCompositionOpList.size() > 0) {
-            composedOpList.add(new FlatSequenceOp(currentCompositionOpList));
+            composedOpList.add(new CompositeMapOp(currentCompositionOpList));
         }
         return composedOpList;
     }

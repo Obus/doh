@@ -19,7 +19,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
-import static doh.op.OpFactory.*;
+import static doh.op.impl.OpFactory.*;
 
 
 public class Example {

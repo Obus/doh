@@ -1,6 +1,9 @@
 package doh.op;
 
+import doh.ds.KVDataSet;
 import doh.ds.RealKVDataSet;
+import doh.op.kvop.KV;
+import doh.op.kvop.KVUnoOp;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
@@ -78,8 +81,12 @@ public class OpFieldSerializer {
     }
 
 
+
+
     public static <T extends RealKVDataSet> void saveKVDS(Configuration conf, String paramName, T value)
             throws Exception {
+        value.beReady();
+
         Path path = value.getPath();
         String paramValue = path.toString();
         conf.set(paramName, paramValue);

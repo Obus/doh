@@ -50,6 +50,7 @@ public interface OpParameterSerDe<T> {
         }
     }
 
+
     public static class WritableOpParameterSerDe<W extends Writable> implements OpParameterSerDe<W> {
 
         @Override
@@ -89,9 +90,9 @@ public interface OpParameterSerDe<T> {
             return (T) w;
         }
 
-        public static Charset charset = Charset.forName("UTF8");
 
     }
+    public static Charset charset = Charset.forName("UTF8");
 
 
 }
