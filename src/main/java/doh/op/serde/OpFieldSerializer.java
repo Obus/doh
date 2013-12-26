@@ -1,9 +1,8 @@
-package doh.op;
+package doh.op.serde;
 
-import doh.ds.KVDataSet;
 import doh.ds.RealKVDataSet;
-import doh.op.kvop.KV;
-import doh.op.kvop.KVUnoOp;
+import doh.op.Context;
+import doh.op.OpParameterSerDe;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;

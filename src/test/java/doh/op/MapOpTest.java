@@ -1,8 +1,9 @@
 package doh.op;
 
+import doh.api.OpParameter;
 import doh.ds.RealKVDataSet;
-import doh.op.kvop.KV;
-import doh.op.kvop.MapOp;
+import doh.api.op.KV;
+import doh.api.op.MapOp;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;

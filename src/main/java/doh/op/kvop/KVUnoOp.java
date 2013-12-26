@@ -1,5 +1,7 @@
 package doh.op.kvop;
 
+import doh.api.op.KV;
+
 public abstract class KVUnoOp<FromKey, FromValue, ToKey, ToValue> extends KVOp<FromKey, FromValue, ToKey, ToValue> {
 
     @Override

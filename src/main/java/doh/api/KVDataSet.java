@@ -1,10 +1,12 @@
-package doh.ds;
+package doh.api;
 
+import doh.ds.DataSet;
+import doh.ds.MapKVDataSet;
 import doh.op.Op;
-import doh.op.kvop.FlatMapOp;
-import doh.op.kvop.KV;
-import doh.op.kvop.MapOp;
-import doh.op.kvop.ReduceOp;
+import doh.api.op.FlatMapOp;
+import doh.api.op.KV;
+import doh.api.op.MapOp;
+import doh.api.op.ReduceOp;
 
 import java.io.IOException;
 import java.util.Iterator;

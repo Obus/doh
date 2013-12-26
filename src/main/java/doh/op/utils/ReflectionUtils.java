@@ -1,9 +1,9 @@
-package doh.op;
+package doh.op.utils;
 
 
-import doh.op.kvop.FlatMapOp;
-import doh.op.kvop.MapOp;
-import doh.op.kvop.ReduceOp;
+import doh.api.op.FlatMapOp;
+import doh.api.op.MapOp;
+import doh.api.op.ReduceOp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,10 +1,7 @@
-package doh.op.impl;
+package doh.api.op.impl;
 
 import com.synqera.bigkore.model.fact.Consumer;
 import doh.ds.MapKVDataSet;
-import doh.op.impl.RawUSToConsumerPaymentsOp;
-import doh.op.impl.ValueAvgOp;
-import doh.op.impl.ValueStdOp;
 
 public class OpFactory {
     public static RawUSToConsumerPaymentsOp rawUserStoryToConsumerPayments() {

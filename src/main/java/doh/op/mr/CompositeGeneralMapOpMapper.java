@@ -1,10 +1,10 @@
 package doh.op.mr;
 
 import doh.op.Op;
-import doh.op.OpSerializer;
+import doh.op.serde.OpSerializer;
 import doh.op.WritableObjectDictionaryFactory;
 import doh.op.kvop.CompositeMapOp;
-import doh.op.kvop.KV;
+import doh.api.op.KV;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -15,10 +15,10 @@ import java.io.IOException;
 import static doh.op.WritableObjectDictionaryFactory.createDictionary;
 
 
-import static doh.op.OpSerializer.loadMapInputKeyClassFromConf;
-import static doh.op.OpSerializer.loadMapInputValueClassFromConf;
-import static doh.op.OpSerializer.loadMapOutputKeyClassFromConf;
-import static doh.op.OpSerializer.loadMapOutputValueClassFromConf;
+import static doh.op.serde.OpSerializer.loadMapInputKeyClassFromConf;
+import static doh.op.serde.OpSerializer.loadMapInputValueClassFromConf;
+import static doh.op.serde.OpSerializer.loadMapOutputKeyClassFromConf;
+import static doh.op.serde.OpSerializer.loadMapOutputValueClassFromConf;
 
 public class CompositeGeneralMapOpMapper <
         WRITABLE_FROM_KEY extends WritableComparable,

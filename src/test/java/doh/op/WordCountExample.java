@@ -1,9 +1,9 @@
 package doh.op;
 
 import doh.ds.RealKVDataSet;
-import doh.op.kvop.FlatMapOp;
-import doh.op.kvop.KV;
-import doh.op.kvop.ReduceOp;
+import doh.api.op.FlatMapOp;
+import doh.api.op.KV;
+import doh.api.op.ReduceOp;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 

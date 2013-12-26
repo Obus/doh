@@ -1,7 +1,7 @@
 package doh.op.kvop;
 
+import doh.api.op.KV;
 import doh.op.Op;
-import doh.op.ReflectionUtils;
 
 import java.util.Iterator;
 

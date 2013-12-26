@@ -1,28 +1,23 @@
 package doh.op.mr;
 
-import doh.ds.KVDataSet;
+import doh.api.KVDataSet;
 import doh.ds.RealKVDataSet;
-import doh.op.OpSerializer;
-import doh.op.ReflectionUtils;
+import doh.op.serde.OpSerializer;
 import doh.op.ValueOnlyReduceOp;
 import doh.op.kvop.CompositeMapOp;
 import doh.op.kvop.CompositeReduceOp;
-import doh.op.kvop.FlatMapOp;
+import doh.api.op.FlatMapOp;
 import doh.op.kvop.KVUnoOp;
-import doh.op.kvop.MapOp;
+import doh.api.op.MapOp;
 import doh.op.kvop.OpKVTransformer;
-import doh.op.kvop.ReduceOp;
-import doh.op.mr.FlatMapOpMapper;
-import doh.op.mr.MapOpMapper;
-import doh.op.mr.ReduceOpReducer;
-import org.apache.hadoop.conf.Configuration;
+import doh.api.op.ReduceOp;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 
 import static doh.op.WritableObjectDictionaryFactory.getWritableClass;
-import static doh.op.ReflectionUtils.isUnknown;
+import static doh.op.utils.ReflectionUtils.isUnknown;
 
 public class KVOpJobUtils {
 

@@ -1,10 +1,10 @@
-package doh.op.impl;
+package doh.api.op.impl;
 
 import com.synqera.bigkore.model.UserStory;
 import com.synqera.bigkore.model.fact.Consumer;
 import com.synqera.bigkore.model.fact.Fact;
 import com.synqera.bigkore.model.fact.Payment;
-import doh.op.kvop.FlatMapOp;
+import doh.api.op.FlatMapOp;
 import org.apache.hadoop.io.BytesWritable;
 
 

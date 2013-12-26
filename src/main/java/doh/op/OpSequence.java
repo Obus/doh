@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static doh.op.ReflectionUtils.UNKNOWN_CLASS;
-import static doh.op.ReflectionUtils.isUnknown;
+import static doh.op.utils.ReflectionUtils.UNKNOWN_CLASS;
+import static doh.op.utils.ReflectionUtils.isUnknown;
 
 public class OpSequence implements Writable, OpKVTransformer {
 

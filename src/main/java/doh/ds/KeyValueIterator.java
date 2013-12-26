@@ -2,7 +2,7 @@ package doh.ds;
 
 import com.synqera.bigkore.rank.PlatformUtils;
 import doh.op.WritableObjectDictionaryFactory;
-import doh.op.kvop.KV;
+import doh.api.op.KV;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;

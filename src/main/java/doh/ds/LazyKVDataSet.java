@@ -1,21 +1,22 @@
 package doh.ds;
 
 import com.google.common.collect.Lists;
+import doh.api.KVDataSet;
+import doh.api.op.FlatMapOp;
+import doh.api.op.KV;
+import doh.api.op.MapOp;
+import doh.api.op.ReduceOp;
 import doh.op.Context;
 import doh.op.Op;
 import doh.op.kvop.*;
 import doh.op.mr.LazyKVDataSetReadyMaker;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.Job;
 import org.apache.mahout.common.Pair;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
-import static doh.op.mr.KVOpJobUtils.configureJob;
 
 public class LazyKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
@@ -23,7 +24,7 @@ public class LazyKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     protected final KVOp<?, ?, Key, Value> parentOperation;
     protected final Context context;
 
-    public LazyKVDataSet(LazyKVDataSet<?, ?> parentDataSet, KVOp<?, ?, Key, Value> parentOperation, Context context) {
+    public <FromKey, FromValue> LazyKVDataSet(LazyKVDataSet<FromKey, FromValue> parentDataSet, KVOp<FromKey, FromValue, Key, Value> parentOperation, Context context) {
         this.parentDataSet = parentDataSet;
         this.parentOperation = parentOperation;
         this.context = context;

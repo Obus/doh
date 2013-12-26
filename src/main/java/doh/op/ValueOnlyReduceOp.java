@@ -1,7 +1,7 @@
 package doh.op;
 
-import doh.op.kvop.KV;
-import doh.op.kvop.ReduceOp;
+import doh.api.op.KV;
+import doh.api.op.ReduceOp;
 
 public abstract class ValueOnlyReduceOp<Key, FromValue, ToValue> extends ReduceOp<Key, FromValue, Key, ToValue> {
 

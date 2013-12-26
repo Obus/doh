@@ -1,7 +1,8 @@
 package doh.op.kvop;
 
 import com.google.common.collect.Lists;
-import doh.op.OpParameter;
+import doh.api.OpParameter;
+import doh.api.op.KV;
 import doh.op.OpSequence;
 import org.apache.hadoop.io.Writable;
 

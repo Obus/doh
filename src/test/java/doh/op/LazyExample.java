@@ -4,15 +4,14 @@ import com.synqera.bigkore.model.fact.Consumer;
 import doh.ds.LazyKVDataSet;
 import doh.ds.MapKVDataSet;
 import doh.ds.RawUserStories;
-import doh.ds.RealKVDataSet;
-import doh.op.kvop.KV;
-import doh.op.kvop.MapOp;
+import doh.api.op.KV;
+import doh.api.op.MapOp;
 import org.apache.hadoop.io.BytesWritable;
 import org.junit.Test;
 
-import static doh.op.impl.OpFactory.rawUserStoryToConsumerPayments;
-import static doh.op.impl.OpFactory.valuesAvg;
-import static doh.op.impl.OpFactory.valuesStd;
+import static doh.api.op.impl.OpFactory.rawUserStoryToConsumerPayments;
+import static doh.api.op.impl.OpFactory.valuesAvg;
+import static doh.api.op.impl.OpFactory.valuesStd;
 
 public class LazyExample {
 

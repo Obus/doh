@@ -1,7 +1,9 @@
-package doh.op.kvop;
+package doh.api.op;
 
 
-import doh.op.ReflectionUtils;
+import doh.op.utils.ReflectionUtils;
+import doh.op.kvop.KVUnoOp;
+import doh.op.kvop.OpKVTransformer;
 
 public abstract class MapOp<FromKey, FromValue, ToKey, ToValue>
         extends KVUnoOp<FromKey, FromValue, ToKey, ToValue>

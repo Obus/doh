@@ -1,7 +1,9 @@
 package doh.op.kvop;
 
 
-import doh.op.OpParameter;
+import doh.api.OpParameter;
+import doh.api.op.KV;
+import doh.api.op.ReduceOp;
 import doh.op.WritableObjectDictionaryFactory;
 import org.apache.hadoop.io.Writable;
 
@@ -10,8 +12,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 
-import static doh.op.ReflectionUtils.UNKNOWN_CLASS;
-import static doh.op.ReflectionUtils.isUnknown;
+import static doh.op.utils.ReflectionUtils.UNKNOWN_CLASS;
+import static doh.op.utils.ReflectionUtils.isUnknown;
 
 public class CompositeReduceOp<FromKey, FromValue, IntermKey, IntermValue, ToKey, ToValue>
         extends KVUnoOp<FromKey, Iterable<FromValue>, ToKey, ToValue> implements Writable, OpKVTransformer<FromKey, FromValue, ToKey, ToValue> {

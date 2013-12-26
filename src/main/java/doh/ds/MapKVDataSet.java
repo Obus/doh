@@ -1,6 +1,6 @@
 package doh.ds;
 
-import doh.op.kvop.KV;
+import doh.api.op.KV;
 import org.apache.hadoop.fs.Path;
 
 import java.util.HashMap;

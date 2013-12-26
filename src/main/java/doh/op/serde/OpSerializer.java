@@ -1,13 +1,16 @@
-package doh.op;
+package doh.op.serde;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import doh.api.OpParameter;
+import doh.op.Op;
+import doh.op.utils.ReflectionUtils;
+import doh.op.WritableObjectDictionaryFactory;
 import doh.op.kvop.CompositeMapOp;
 import doh.op.kvop.CompositeReduceOp;
-import doh.op.kvop.FlatMapOp;
+import doh.api.op.FlatMapOp;
 import doh.op.kvop.KVOp;
-import doh.op.kvop.MapOp;
-import doh.op.kvop.ReduceOp;
+import doh.api.op.MapOp;
+import doh.api.op.ReduceOp;
 import org.apache.hadoop.conf.Configuration;
 
 import java.lang.annotation.Annotation;

@@ -8,7 +8,7 @@ import com.synqera.bigkore.model.fact.Time;
 import doh.ds.MapKVDataSet;
 import doh.ds.RawUserStories;
 import doh.ds.RealKVDataSet;
-import doh.op.kvop.KV;
+import doh.api.op.KV;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
@@ -19,7 +19,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
-import static doh.op.impl.OpFactory.*;
+import static doh.api.op.impl.OpFactory.*;
 
 
 public class Example {

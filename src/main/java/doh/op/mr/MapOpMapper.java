@@ -1,9 +1,9 @@
 package doh.op.mr;
 
-import doh.op.OpSerializer;
+import doh.op.serde.OpSerializer;
 import doh.op.WritableObjectDictionaryFactory.WritableObjectDictionary;
-import doh.op.kvop.KV;
-import doh.op.kvop.MapOp;
+import doh.api.op.KV;
+import doh.api.op.MapOp;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Mapper;

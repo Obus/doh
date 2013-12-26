@@ -1,10 +1,10 @@
 package doh.op.mr;
 
 import doh.op.Op;
-import doh.op.OpSerializer;
+import doh.op.serde.OpSerializer;
 import doh.op.WritableObjectDictionaryFactory;
 import doh.op.kvop.CompositeReduceOp;
-import doh.op.kvop.KV;
+import doh.api.op.KV;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Reducer;
