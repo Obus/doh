@@ -143,43 +143,9 @@ public class OpSerializer {
     }
 
 
-    private static <T extends Op> T loadOpFromConf(Configuration conf, String paramName) throws Exception {
-        String opClassStr = conf.get(paramName);
-        Class opClass = Class.forName(opClassStr);
-        T op = (T) opClass.newInstance();
-        loadOpFieldsFromConf(conf, op);
-        return op;
-    }
 
 
-    private static <T extends KVOp> void saveSimpleOpToConf(Configuration conf, String paramName, T op) throws Exception {
-        conf.set(paramName, op.getClass().getName());
-        saveOpFieldsToConf(conf, op);
-    }
 
-    private static <T extends Op> T loadOpFieldsFromConf(Configuration conf, T op) throws Exception {
-        Class opClass = op.getClass();
-        List<Field> opParameters = opParametersAccessible(ReflectionUtils.getAllDeclaredFields(opClass));
-        for (Field f : opParameters) {
-            loadFieldFromConf(conf, op, f);
-        }
-        return op;
-    }
-
-    private static <T extends Op> T saveOpFieldsToConf(Configuration conf, T op) throws Exception {
-        Class opClass = op.getClass();
-        List<Field> opParameters = opParametersAccessible(ReflectionUtils.getAllDeclaredFields(opClass));
-        for (Field f : opParameters) {
-            OpFieldSerializer.saveFieldToConf(conf, op, f);
-        }
-        return op;
-    }
-
-    private static <T> T loadFieldFromConf(Configuration conf, T op, Field f) throws Exception {
-        Object value = OpFieldSerializer.load(conf, OpFieldSerializer.parameterForOpField(op, f), OpFieldSerializer.fieldClass(f));
-        OpFieldSerializer.setFieldValue(op, f, value);
-        return op;
-    }
 
     public static List<Field> opParametersAccessible(List<Field> fields) {
         List<Field> opParameters = new ArrayList<Field>();

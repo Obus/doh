@@ -1,5 +1,6 @@
 package doh.ds;
 
+import doh.api.ds.Location;
 import doh.api.op.KV;
 import org.apache.hadoop.fs.Path;
 
@@ -10,8 +11,8 @@ public class MapKVDataSet<KEY, VALUE> extends RealKVDataSet<KEY, VALUE> {
 
     private Map<KEY, VALUE> inMemoryMap;
 
-    public MapKVDataSet(Path path) {
-        super(path);
+    public MapKVDataSet(Location location) {
+        super(location);
     }
 
     protected synchronized Map<KEY, VALUE> inMemoryMap() {

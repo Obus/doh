@@ -1,6 +1,7 @@
 package doh.op;
 
 import doh.api.OpParameter;
+import doh.api.ds.HDFSLocation;
 import doh.ds.RealKVDataSet;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
@@ -120,8 +121,9 @@ public class MapOpTest {
         RealKVDataSet<String, Integer> res = csv.map(new SimpleParametrizedMapOp(3));
 
         // Path resData = ;
-        FileSystem fs = res.getPath().getFileSystem(conf);
-        FileStatus[] statuses = fs.listStatus(res.getPath(), new Utils.OutputFileUtils.OutputFilesFilter());
+        Path path = ((HDFSLocation.SingleHDFSLocation)res.getLocation()).getPath();
+        FileSystem fs = path.getFileSystem(conf);
+        FileStatus[] statuses = fs.listStatus(path, new Utils.OutputFileUtils.OutputFilesFilter());
         assertEquals(1, statuses.length);
         Path resData = statuses[0].getPath();
 

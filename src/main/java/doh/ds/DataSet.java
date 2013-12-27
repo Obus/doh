@@ -1,7 +1,7 @@
 package doh.ds;
 
 import doh.op.Op;
-import org.apache.hadoop.fs.Path;
+import doh.api.ds.Location;
 
 
 public interface DataSet<ORIGIN> {
@@ -19,7 +19,7 @@ public interface DataSet<ORIGIN> {
     public <TORIGIN> DataSet<TORIGIN> apply(Op<ORIGIN, TORIGIN> op) throws Exception;
 
 
-    public Path getPath();
+    public Location getLocation();
 
     // public Configuration getConf()
 }

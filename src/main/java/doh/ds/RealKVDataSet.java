@@ -1,7 +1,9 @@
 package doh.ds;
 
 import com.synqera.bigkore.rank.PlatformUtils;
+import doh.api.ds.HDFSLocation;
 import doh.api.ds.KVDataSet;
+import doh.api.ds.Location;
 import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
@@ -9,7 +11,6 @@ import doh.api.op.ReduceOp;
 import doh.op.*;
 import doh.op.kvop.*;
 import doh.op.mr.FlatMapOpMapper;
-import doh.op.mr.KVOpJobUtils;
 import doh.op.mr.MapOpMapper;
 import doh.op.mr.ReduceOpReducer;
 import doh.op.serde.OpSerializer;
@@ -30,16 +31,27 @@ import static doh.op.WritableObjectDictionaryFactory.getObjectClass;
 import static doh.op.WritableObjectDictionaryFactory.getWritableClass;
 
 public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
-    protected final Path path;
+    protected final Location location;
     protected Context context;
+
+
+    public RealKVDataSet(Path path) {
+        location = new HDFSLocation.SingleHDFSLocation(path);
+    }
+    public RealKVDataSet(Path[] path) {
+        location = new HDFSLocation.MultyHDFSLocation(path);
+    }
 
 
     public Context getContext() {
         return context;
     }
 
-    public RealKVDataSet(Path path) {
-        this.path = path;
+    public RealKVDataSet(Location location) {
+        if (!location.isHDFS()) {
+            throw new UnsupportedOperationException();
+        }
+        this.location = location;
     }
 
     @Override
@@ -57,18 +69,48 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     @Override
-    public Path getPath() {
-        return path;
+    public Location getLocation() {
+        return location;
     }
 
     @Override
     public Iterator<KV<Key, Value>> iteratorChecked() throws IOException {
-        return new KeyValueIterator(context.getConf(), getPath(), keyClass(), valueClass());
+        HDFSLocation hdfsLocation = hdfsLocation();
+        if (!hdfsLocation.isSingle()) {
+            throw new UnsupportedOperationException();
+        }
+        Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
+        try {
+            return new KeyValueIterator(
+                    this.context.getConf(),
+                    path, this.keyClass(), this.valueClass());
+        } catch (IOException e) {
+            throw new IOException(e);
+        }
+    }
+
+    private HDFSLocation hdfsLocation() {
+        if (location.isHDFS()) {
+            return (HDFSLocation) location;
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    private Path[] paths() {
+        if (hdfsLocation().isSingle()) {
+            return new Path[] {((HDFSLocation.SingleHDFSLocation)hdfsLocation()).getPath()};
+        }
+        else if (!hdfsLocation().isSingle()) {
+            return ((HDFSLocation.MultyHDFSLocation)hdfsLocation()).getPaths();
+        }
+        else {
+            throw new IllegalStateException();
+        }
     }
 
     @Override
     public MapKVDataSet<Key, Value> toMapKVDS() {
-        MapKVDataSet<Key, Value> mapKVDS = new MapKVDataSet<Key, Value>(getPath());
+        MapKVDataSet<Key, Value> mapKVDS = new MapKVDataSet<Key, Value>(getLocation());
         mapKVDS.setContext(context);
         return mapKVDS;
     }
@@ -109,11 +151,12 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     ) throws Exception {
 
         Configuration conf = this.context.getConf();
-        Path input = this.getPath();
+        Path[] inputs = paths();
+
         Path output = context.nextTempPath();
 
         Job job = new Job(conf, "Map only job");
-        FileInputFormat.setInputPaths(job, input);
+        FileInputFormat.setInputPaths(job, inputs);
         FileOutputFormat.setOutputPath(job, output);
 
         setUpMapOnlyOpJob(job, mapOp);
@@ -133,11 +176,11 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     ) throws Exception {
 
         Configuration conf = this.context.getConf();
-        Path input = this.getPath();
+        Path[] inputs = paths();
         Path output = context.nextTempPath();
 
         Job job = new Job(conf, "FlatMap only job");
-        FileInputFormat.setInputPaths(job, input);
+        FileInputFormat.setInputPaths(job, inputs);
         FileOutputFormat.setOutputPath(job, output);
 
         setUpFlatMapOnlyOpJob(job, flatMapOp);
@@ -157,11 +200,11 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     ) throws Exception {
 
         Configuration conf = this.context.getConf();
-        Path input = this.getPath();
+        Path[] inputs = paths();
         Path output = context.nextTempPath();
 
         Job job = new Job(conf, "Reduce only job");
-        FileInputFormat.setInputPaths(job, input);
+        FileInputFormat.setInputPaths(job, inputs);
         FileOutputFormat.setOutputPath(job, output);
 
         setUpReduceOnlyOpJob(job, reduceOp);
@@ -225,18 +268,28 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
     @Override
     public Class<?> writableKeyClass() throws IOException {
-        Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
-        SequenceFile.Reader r
-                = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
-        return r.getKeyClass();
+        HDFSLocation hdfsLocation = hdfsLocation();
+        if (hdfsLocation.isSingle()) {
+            Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
+            Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), path)[0];
+            SequenceFile.Reader r
+                    = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
+            return r.getKeyClass();
+        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Class<?> writableValueClass() throws IOException {
-        Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), getPath())[0];
-        SequenceFile.Reader r
-                = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
-        return r.getValueClass();
+        HDFSLocation hdfsLocation = hdfsLocation();
+        if (hdfsLocation.isSingle()) {
+            Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
+            Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), path)[0];
+            SequenceFile.Reader r
+                    = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
+            return r.getValueClass();
+        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -251,7 +304,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
 
     public static <KEY, VALUE> RealKVDataSet<KEY, VALUE> create(Context context, Path path) {
-        RealKVDataSet<KEY, VALUE> kvds = new RealKVDataSet<KEY, VALUE>(path);
+        RealKVDataSet<KEY, VALUE> kvds = new RealKVDataSet<KEY, VALUE>(new HDFSLocation.SingleHDFSLocation(path));
         kvds.setContext(context);
         return kvds;
     }

@@ -1,5 +1,6 @@
 package doh.op.mr;
 
+import doh.api.ds.HDFSLocation;
 import doh.api.ds.KVDataSet;
 import doh.ds.RealKVDataSet;
 import doh.op.serde.OpSerializer;
@@ -10,6 +11,7 @@ import doh.op.kvop.KVUnoOp;
 import doh.api.op.MapOp;
 import doh.op.kvop.OpKVTransformer;
 import doh.api.op.ReduceOp;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -20,10 +22,30 @@ import static doh.op.utils.ReflectionUtils.isUnknown;
 
 public class KVOpJobUtils {
 
+
+    private static HDFSLocation hdfsLocation(RealKVDataSet origin) {
+        if (origin.getLocation().isHDFS()) {
+            return (HDFSLocation) origin.getLocation();
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    private static Path[] paths(RealKVDataSet origin) {
+        if (hdfsLocation(origin).isSingle()) {
+            return new Path[] {((HDFSLocation.SingleHDFSLocation)hdfsLocation(origin)).getPath()};
+        }
+        else if (!hdfsLocation(origin).isSingle()) {
+            return ((HDFSLocation.MultyHDFSLocation)hdfsLocation(origin)).getPaths();
+        }
+        else {
+            throw new IllegalStateException();
+        }
+    }
+
     public static Job createCompositeMapReduceJob(RealKVDataSet origin, CompositeMapOp compositeMapOp, ReduceOp reduceOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Composite map simple reduce job");
         configureJob(job, origin, compositeMapOp, reduceOp);
-        FileInputFormat.setInputPaths(job, origin.getPath());
+        FileInputFormat.setInputPaths(job, paths(origin));
         FileOutputFormat.setOutputPath(job, origin.getContext().nextTempPath());
         return job;
     }
@@ -31,7 +53,7 @@ public class KVOpJobUtils {
     public static Job createCompositeMapCompositeReduceJob(RealKVDataSet origin, CompositeMapOp compositeMapOp, CompositeReduceOp compositeReduceOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Composite map simple reduce job");
         configureJob(job, origin, compositeMapOp, compositeReduceOp);
-        FileInputFormat.setInputPaths(job, origin.getPath());
+        FileInputFormat.setInputPaths(job, paths(origin));
         FileOutputFormat.setOutputPath(job, origin.getContext().nextTempPath());
         return job;
     }
@@ -39,7 +61,7 @@ public class KVOpJobUtils {
     public static Job createReduceOnlyJob(RealKVDataSet origin, ReduceOp reduceOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Simple reduce only job");
         configureJob(job, origin, reduceOp);
-        FileInputFormat.setInputPaths(job, origin.getPath());
+        FileInputFormat.setInputPaths(job, paths(origin));
         FileOutputFormat.setOutputPath(job, origin.getContext().nextTempPath());
         return job;
     }
@@ -47,7 +69,7 @@ public class KVOpJobUtils {
     public static Job createCompositeReduceOnlyJob(RealKVDataSet origin, CompositeReduceOp compositeReduceOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Composite reduce only job");
         configureJob(job, origin, compositeReduceOp);
-        FileInputFormat.setInputPaths(job, origin.getPath());
+        FileInputFormat.setInputPaths(job, paths(origin));
         FileOutputFormat.setOutputPath(job, origin.getContext().nextTempPath());
         return job;
     }
@@ -55,7 +77,7 @@ public class KVOpJobUtils {
     public static Job createCompositeMapOnlyJob(RealKVDataSet origin, CompositeMapOp compositeMapOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Composite map only job");
         configureJob(job, origin, compositeMapOp);
-        FileInputFormat.setInputPaths(job, origin.getPath());
+        FileInputFormat.setInputPaths(job, paths(origin));
         FileOutputFormat.setOutputPath(job, origin.getContext().nextTempPath());
         return job;
     }
@@ -63,7 +85,7 @@ public class KVOpJobUtils {
     public static Job createMapOnlyJob(RealKVDataSet origin, MapOp compositeMapOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Map only job");
         configureJob(job, origin, compositeMapOp);
-        FileInputFormat.setInputPaths(job, origin.getPath());
+        FileInputFormat.setInputPaths(job, paths(origin));
         FileOutputFormat.setOutputPath(job, origin.getContext().nextTempPath());
         return job;
     }

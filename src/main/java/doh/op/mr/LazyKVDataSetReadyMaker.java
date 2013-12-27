@@ -1,6 +1,7 @@
 package doh.op.mr;
 
 import com.google.common.collect.Lists;
+import doh.api.ds.HDFSLocation;
 import doh.ds.LazyKVDataSet;
 import doh.ds.RealKVDataSet;
 import doh.op.kvop.CompositeMapOp;
@@ -54,7 +55,7 @@ public class LazyKVDataSetReadyMaker {
         while ((lazyJobPair = nextJob(parentOpChildIt)) != null) {
             Path outputPath = FileOutputFormat.getOutputPath(lazyJobPair.getSecond());
             origin.getContext().runJob(lazyJobPair.getSecond());
-            RealKVDataSet real = new RealKVDataSet(outputPath);
+            RealKVDataSet real = new RealKVDataSet(new HDFSLocation.SingleHDFSLocation(outputPath));
             real.setContext(origin.getContext());
             lazyJobPair.getFirst().setReal(real);
         }

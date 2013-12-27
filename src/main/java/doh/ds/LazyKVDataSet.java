@@ -2,6 +2,7 @@ package doh.ds;
 
 import com.google.common.collect.Lists;
 import doh.api.ds.KVDataSet;
+import doh.api.ds.Location;
 import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
@@ -157,8 +158,8 @@ public class LazyKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     @Override
-    public Path getPath() {
-        return real().getPath();
+    public Location getLocation() {
+        return real().getLocation();
     }
 
 

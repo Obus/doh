@@ -7,6 +7,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import doh.api.ds.HDFSLocation;
 import doh.ds.MapKVDataSet;
 import doh.op.Context;
 import org.apache.hadoop.conf.Configuration;
@@ -21,13 +22,14 @@ public class MapKVDataSetJsonSerDe implements JsonSerializer<MapKVDataSet>, Json
     public MapKVDataSet deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         Path path = new Path(json.getAsJsonPrimitive().getAsString());
         Context context1 = Context.create(conf, null);
-        MapKVDataSet mkvds = new MapKVDataSet(path);
+        MapKVDataSet mkvds = new MapKVDataSet(new HDFSLocation.SingleHDFSLocation(path));
         mkvds.setContext(context1);
         return mkvds;
     }
 
     @Override
     public JsonElement serialize(MapKVDataSet src, Type typeOfSrc, JsonSerializationContext context) {
-        return new JsonPrimitive(src.getPath().toString());
+        Path path = ((HDFSLocation.SingleHDFSLocation) src.getLocation()).getPath();
+        return new JsonPrimitive(path.toString());
     }
 }
