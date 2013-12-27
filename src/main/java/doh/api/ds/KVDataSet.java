@@ -21,6 +21,8 @@ public interface KVDataSet<KEY, VALUE> extends Iterable<KV<KEY, VALUE>>, DataSet
 
     void beReady() throws Exception ;
 
+    KVDataSet<KEY, VALUE> comeTogetherRightNow(KVDataSet<KEY, VALUE> other);
+
     @Override
     Iterator<KV<KEY, VALUE>> iterator();
 

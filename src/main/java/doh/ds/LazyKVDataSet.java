@@ -2,6 +2,7 @@ package doh.ds;
 
 import com.google.common.collect.Lists;
 import doh.api.ds.KVDataSet;
+import doh.api.ds.KVDataSetFactory;
 import doh.api.ds.Location;
 import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
@@ -38,6 +39,13 @@ public class LazyKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         this.real = real;
     }
 
+    public LazyKVDataSet(RealKVDataSet<Key, Value> real) {
+        this.parentOperation = null;
+        this.parentDataSet = null;
+        this.context = real.context;
+        this.real = real;
+    }
+
     protected RealKVDataSet<Key, Value> real = null;
 
     public synchronized RealKVDataSet<Key, Value> real() {
@@ -64,6 +72,15 @@ public class LazyKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         new LazyKVDataSetReadyMaker(this).makeItReady();
     }
 
+
+    @Override
+    public KVDataSet<Key, Value> comeTogetherRightNow(KVDataSet<Key, Value> other) {
+        RealKVDataSet<Key, Value> a = real();
+        RealKVDataSet<Key, Value> b = other instanceof RealKVDataSet ?
+                (RealKVDataSet<Key, Value>) other :
+                ((LazyKVDataSet<Key, Value>) other).real();
+        return KVDataSetFactory.createLazy(a.comeTogetherRightNow(b));
+    }
 
     protected List<Pair<LazyKVDataSet, KVOp>> ancestors() {
         List<Pair<LazyKVDataSet, KVOp>> ancestors = Lists.newArrayList();

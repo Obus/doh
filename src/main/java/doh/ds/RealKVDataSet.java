@@ -3,6 +3,7 @@ package doh.ds;
 import com.synqera.bigkore.rank.PlatformUtils;
 import doh.api.ds.HDFSLocation;
 import doh.api.ds.KVDataSet;
+import doh.api.ds.KVDataSetFactory;
 import doh.api.ds.Location;
 import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
@@ -75,7 +76,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
     @Override
     public Iterator<KV<Key, Value>> iteratorChecked() throws IOException {
-        HDFSLocation hdfsLocation = hdfsLocation();
+        HDFSLocation hdfsLocation = hdfsLocation(getLocation());
         if (!hdfsLocation.isSingle()) {
             throw new UnsupportedOperationException();
         }
@@ -89,7 +90,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         }
     }
 
-    private HDFSLocation hdfsLocation() {
+    private static HDFSLocation hdfsLocation(Location location) {
         if (location.isHDFS()) {
             return (HDFSLocation) location;
         }
@@ -97,15 +98,32 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     private Path[] paths() {
-        if (hdfsLocation().isSingle()) {
-            return new Path[] {((HDFSLocation.SingleHDFSLocation)hdfsLocation()).getPath()};
+        return getPaths(getLocation());
+    }
+
+    private static Path[] paths(HDFSLocation hdfsLocation) {
+        if (hdfsLocation.isSingle()) {
+            return new Path[] {((HDFSLocation.SingleHDFSLocation)hdfsLocation).getPath()};
         }
-        else if (!hdfsLocation().isSingle()) {
-            return ((HDFSLocation.MultyHDFSLocation)hdfsLocation()).getPaths();
+        else if (!hdfsLocation.isSingle()) {
+            return ((HDFSLocation.MultyHDFSLocation)hdfsLocation).getPaths();
         }
         else {
             throw new IllegalStateException();
         }
+    }
+
+    public static Path[] getPaths(Location location) {
+        return paths(hdfsLocation(location));
+    }
+
+    @Override
+    public RealKVDataSet<Key, Value> comeTogetherRightNow(KVDataSet<Key, Value> other) {
+        RealKVDataSet<Key, Value> a = this;
+        RealKVDataSet<Key, Value> b = other instanceof RealKVDataSet ?
+                (RealKVDataSet<Key, Value>) other :
+                ((LazyKVDataSet<Key, Value>) other).real();
+        return KVDataSetFactory.createReal(a, b);
     }
 
     @Override
@@ -268,7 +286,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
     @Override
     public Class<?> writableKeyClass() throws IOException {
-        HDFSLocation hdfsLocation = hdfsLocation();
+        HDFSLocation hdfsLocation = hdfsLocation(getLocation());
         if (hdfsLocation.isSingle()) {
             Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
             Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), path)[0];
@@ -281,7 +299,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
     @Override
     public Class<?> writableValueClass() throws IOException {
-        HDFSLocation hdfsLocation = hdfsLocation();
+        HDFSLocation hdfsLocation = hdfsLocation(getLocation());
         if (hdfsLocation.isSingle()) {
             Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
             Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), path)[0];
