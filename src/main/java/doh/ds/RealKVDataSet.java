@@ -44,6 +44,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
 
+    @Override
     public Context getContext() {
         return context;
     }
@@ -65,6 +66,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         // always ready
     }
 
+    @Override
     public void setContext(Context context) {
         this.context = context;
     }
@@ -238,7 +240,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
 
     public void setUpMapOpJob(Job job, MapOp mapOp) throws Exception {
-        OpSerializer.saveMapOpToConf(job.getConfiguration(), mapOp);
+        context.opSerializer().saveMapOpToConf(job.getConfiguration(), mapOp);
         job.setMapperClass(MapOpMapper.class);
         job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setMapOutputValueClass(getWritableClass(mapOp.toValueClass()));
@@ -252,7 +254,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     public void setUpFlatMapOpJob(Job job, FlatMapOp mapOp) throws Exception {
-        OpSerializer.saveFlatMapOpToConf(job.getConfiguration(), mapOp);
+        context.opSerializer().saveFlatMapOpToConf(job.getConfiguration(), mapOp);
         job.setMapperClass(FlatMapOpMapper.class);
         job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setMapOutputValueClass(getWritableClass(mapOp.toValueClass()));
@@ -265,7 +267,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     public void setUpReduceOpJob(Job job, ReduceOp reduceOp) throws Exception {
-        OpSerializer.saveReduceOpToConf(job.getConfiguration(), reduceOp);
+        context.opSerializer().saveReduceOpToConf(job.getConfiguration(), reduceOp);
         job.setReducerClass(ReduceOpReducer.class);
         if (reduceOp instanceof ValueOnlyReduceOp) {
             job.setOutputKeyClass(this.writableKeyClass());
@@ -289,12 +291,27 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         HDFSLocation hdfsLocation = hdfsLocation(getLocation());
         if (hdfsLocation.isSingle()) {
             Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
-            Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), path)[0];
-            SequenceFile.Reader r
-                    = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
-            return r.getKeyClass();
+            return keyClassOfDir(context.getConf(), path);
+        }
+        else if (!hdfsLocation.isSingle()) {
+            Path path = ((HDFSLocation.MultyHDFSLocation) hdfsLocation).getPaths()[0];
+            return keyClassOfDir(context.getConf(), path);
         }
         throw new UnsupportedOperationException();
+    }
+
+    public static Class<?> valueClassOfDir(Configuration conf, Path path) throws IOException {
+        Path dataPath = PlatformUtils.listOutputFiles(conf, path)[0];
+        SequenceFile.Reader r
+                = new SequenceFile.Reader(dataPath.getFileSystem(conf), dataPath, conf);
+        return r.getValueClass();
+    }
+
+    public static Class<?> keyClassOfDir(Configuration conf, Path path) throws IOException {
+        Path dataPath = PlatformUtils.listOutputFiles(conf, path)[0];
+        SequenceFile.Reader r
+                = new SequenceFile.Reader(dataPath.getFileSystem(conf), dataPath, conf);
+        return r.getKeyClass();
     }
 
     @Override
@@ -302,10 +319,11 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         HDFSLocation hdfsLocation = hdfsLocation(getLocation());
         if (hdfsLocation.isSingle()) {
             Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
-            Path dataPath = PlatformUtils.listOutputFiles(context.getConf(), path)[0];
-            SequenceFile.Reader r
-                    = new SequenceFile.Reader(dataPath.getFileSystem(context.getConf()), dataPath, context.getConf());
-            return r.getValueClass();
+            return valueClassOfDir(context.getConf(), path);
+        }
+        else if (!hdfsLocation.isSingle()) {
+            Path path = ((HDFSLocation.MultyHDFSLocation) hdfsLocation).getPaths()[0];
+            return valueClassOfDir(context.getConf(), path);
         }
         throw new UnsupportedOperationException();
     }

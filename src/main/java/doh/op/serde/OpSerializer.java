@@ -3,6 +3,7 @@ package doh.op.serde;
 import com.google.common.base.Splitter;
 import doh.api.OpParameter;
 import doh.op.Op;
+import doh.op.StringSerDe;
 import doh.op.utils.ReflectionUtils;
 import doh.op.WritableObjectDictionaryFactory;
 import doh.op.kvop.CompositeMapOp;
@@ -27,6 +28,42 @@ public class OpSerializer {
     private static final String COMPOSITE_REDUCE_PARAM_NAME = "tmp.op.composite.reduce";
 
     private static final String KEY_VALUE_CLASSES_NAME = "tmp.op.keyValue.classes";
+    private static final String SELF_NAME = "tmp.op.serializer";
+
+    private final StringSerDe stringSerDe;
+    // private final Configuration conf;
+
+    private OpSerializer(StringSerDe stringSerDe) {
+        this.stringSerDe = stringSerDe;
+    }
+
+    public static OpSerializer create(Configuration conf, StringSerDe stringSerDe) {
+        OpSerializer opSerializer = new OpSerializer(stringSerDe);
+        saveToConf(opSerializer, conf);
+        return opSerializer;
+    }
+
+
+    public static void saveToConf(OpSerializer opSerializer, Configuration conf) {
+        try {
+            conf.set(SELF_NAME, opSerializer.stringSerDe.serializeSelf());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public static OpSerializer create(Configuration conf) {
+        try {
+            return new OpSerializer(StringSerDe.deserializeSerDe(conf.get(SELF_NAME)));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+
 
     public static void saveKVClassesToConf(Configuration conf,
                                            Class<?> mapperInputKeyClass,
@@ -80,8 +117,8 @@ public class OpSerializer {
     }
 
 
-    private static void saveObjectToConf(Configuration conf, String paramName, Object obj) throws Exception {
-        String value = WritableObjectDictionaryFactory.objectToString(obj);
+    private  void saveObjectToConf(Configuration conf, String paramName, Object obj) throws Exception {
+        String value = stringSerDe.serialize(obj); //WritableObjectDictionaryFactory.objectToString(obj);
         System.out.println();
         System.out.println();
         System.out.println("Saving parameter: " + paramName);
@@ -90,55 +127,55 @@ public class OpSerializer {
     }
 
 
-    private static Object loadObjectFromConf(Configuration conf, String paramName) throws Exception {
-        return WritableObjectDictionaryFactory.stringToObject(conf.get(paramName));
+    private  Object loadObjectFromConf(Configuration conf, String paramName) throws Exception {
+        return stringSerDe.deserialize(conf.get(paramName)); //WritableObjectDictionaryFactory.stringToObject(conf.get(paramName));
     }
 
 
-    public static <T extends MapOp> T loadMapOpFromConf(Configuration conf) throws Exception {
+    public  <T extends MapOp> T loadMapOpFromConf(Configuration conf) throws Exception {
         return (T) loadObjectFromConf(conf, MAP_PARAM_NAME); //loadOpFromConf(conf, MAP_PARAM_NAME);
     }
 
-    public static <T extends FlatMapOp> T loadFlatMapOpFromConf(Configuration conf) throws Exception {
+    public  <T extends FlatMapOp> T loadFlatMapOpFromConf(Configuration conf) throws Exception {
         return (T) loadObjectFromConf(conf, FLAT_MAP_PARAM_NAME); //loadOpFromConf(conf, FLAT_MAP_PARAM_NAME);
     }
 
-    public static <T extends ReduceOp> T loadReduceOpFromConf(Configuration conf) throws Exception {
+    public  <T extends ReduceOp> T loadReduceOpFromConf(Configuration conf) throws Exception {
         return (T) loadObjectFromConf(conf, REDUCE_PARAM_NAME); //loadOpFromConf(conf, REDUCE_PARAM_NAME);
     }
 
-    public static <T extends MapOp> void saveMapOpToConf(Configuration conf, T op) throws Exception {
+    public  <T extends MapOp> void saveMapOpToConf(Configuration conf, T op) throws Exception {
         saveObjectToConf(conf, MAP_PARAM_NAME, op);
 //        conf.set(MAP_PARAM_NAME, op.getClass().getName());
 //        saveOpFieldsToConf(conf, op);
     }
 
-    public static <T extends FlatMapOp> void saveFlatMapOpToConf(Configuration conf, T op) throws Exception {
+    public  <T extends FlatMapOp> void saveFlatMapOpToConf(Configuration conf, T op) throws Exception {
         saveObjectToConf(conf, FLAT_MAP_PARAM_NAME, op);
 //        conf.set(FLAT_MAP_PARAM_NAME, op.getClass().getName());
 //        saveOpFieldsToConf(conf, op);
     }
 
-    public static <T extends ReduceOp> void saveReduceOpToConf(Configuration conf, T op) throws Exception {
+    public  <T extends ReduceOp> void saveReduceOpToConf(Configuration conf, T op) throws Exception {
         saveObjectToConf(conf, REDUCE_PARAM_NAME, op);
 //        conf.set(REDUCE_PARAM_NAME, op.getClass().getName());
 //        saveOpFieldsToConf(conf, op);
     }
 
-    public static <T extends CompositeMapOp> T loadCompositeMapOpConf(Configuration conf) throws Exception {
+    public  <T extends CompositeMapOp> T loadCompositeMapOpConf(Configuration conf) throws Exception {
         return (T) loadObjectFromConf(conf, COMPOSITE_MAP_PARAM_NAME); //throw new UnsupportedOperationException();
     }
 
 
-    public static <T extends CompositeReduceOp> T loadCompositeReduceOpConf(Configuration conf) throws Exception {
+    public  <T extends CompositeReduceOp> T loadCompositeReduceOpConf(Configuration conf) throws Exception {
         return (T) loadObjectFromConf(conf, COMPOSITE_REDUCE_PARAM_NAME); //throw new UnsupportedOperationException();
     }
 
-    public static void saveCompositeMapOp(Configuration conf, CompositeMapOp op) throws Exception {
+    public  void saveCompositeMapOp(Configuration conf, CompositeMapOp op) throws Exception {
         saveObjectToConf(conf, COMPOSITE_MAP_PARAM_NAME, op);//throw new UnsupportedOperationException();
     }
 
-    public static void saveCompositeReduceOp(Configuration conf, CompositeReduceOp op) throws Exception {
+    public  void saveCompositeReduceOp(Configuration conf, CompositeReduceOp op) throws Exception {
         saveObjectToConf(conf, COMPOSITE_REDUCE_PARAM_NAME, op);//throw new UnsupportedOperationException();
     }
 

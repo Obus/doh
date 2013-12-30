@@ -3,6 +3,7 @@ package doh.op.mr;
 import doh.op.serde.OpSerializer;
 import doh.api.op.KV;
 import doh.api.op.ReduceOp;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -32,11 +33,14 @@ public class ReduceOpReducer
     private WritableObjectDictionary<FROM_VALUE, WRITABLE_FROM_VALUE> fromValueDictionary;
     private WritableObjectDictionary<TO_KEY, WRITABLE_TO_KEY> toKeyDictionary;
     private WritableObjectDictionary<TO_VALUE, WRITABLE_TO_VALUE> toValueDictionary;
+    private OpSerializer opSerializer;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         try {
-            op = OpSerializer.loadReduceOpFromConf(context.getConfiguration());
+            Configuration conf = context.getConfiguration();
+            opSerializer = OpSerializer.create(conf);
+            op = opSerializer.loadReduceOpFromConf(context.getConfiguration());
             fromKeyDictionary = createDictionary(op.fromKeyClass());
             fromValueDictionary = createDictionary(op.fromValueClass());
             toKeyDictionary = createDictionary(op.toKeyClass());

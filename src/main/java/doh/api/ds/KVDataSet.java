@@ -2,6 +2,7 @@ package doh.api.ds;
 
 import doh.ds.DataSet;
 import doh.ds.MapKVDataSet;
+import doh.op.Context;
 import doh.op.Op;
 import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
@@ -47,4 +48,7 @@ public interface KVDataSet<KEY, VALUE> extends Iterable<KV<KEY, VALUE>>, DataSet
     Class<KEY> keyClass() throws IOException;
 
     Class<VALUE> valueClass() throws IOException;
+
+    void setContext(Context context);
+    Context getContext();
 }

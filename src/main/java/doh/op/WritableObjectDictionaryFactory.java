@@ -2,6 +2,7 @@ package doh.op;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.owlike.genson.Genson;
 import doh.ds.MapKVDataSet;
 import doh.op.kvop.CompositeReduceOp;
 import doh.api.op.FlatMapOp;
@@ -9,6 +10,7 @@ import doh.op.kvop.KVOp;
 import doh.api.op.MapOp;
 import doh.api.op.ReduceOp;
 import doh.op.serde.CompositeReduceOpJsonSerDe;
+import doh.op.serde.MapKVDataSetGensonSerDe;
 import doh.op.serde.MapKVDataSetJsonSerDe;
 import doh.op.serde.OpSequenceJsonSerDe;
 import doh.op.serde.OpSerializer;
@@ -179,73 +181,8 @@ public class WritableObjectDictionaryFactory {
         throw new IllegalArgumentException("Unsupported parameter class: " + objClass);
     }
 
-    public static String objectToString(Object o) throws Exception {
-        if (1 == 1) return objectToJson(o);
-        Writable w = new AnyObjectWritable(o);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutput dataOutput = new DataOutputStream(baos);
-        w.write(dataOutput);
-        return baos.toString("UTF-8");
-
-        //String s = dataOutputToString(buffer);// new String(Arrays.trimToCapacity(buffer.getData(), buffer.getLength()), OpParameterSerDe.charset);//writableToString(w);
-        //return s;//s.replaceAll("\"&#", "MOAR_BIGKOAR");
-    }
 
 
-    private static final GsonBuilder gsonBuilder = new GsonBuilder();
-    static {
-        gsonBuilder.registerTypeAdapter(OpSequence.class, new OpSequenceJsonSerDe());
-        gsonBuilder.registerTypeAdapter(MapKVDataSet.class, new MapKVDataSetJsonSerDe());
-        gsonBuilder.registerTypeAdapter(CompositeReduceOp.class, new CompositeReduceOpJsonSerDe());
-    }
-    private static final Gson gson = gsonBuilder.create();//= new Gson();
-
-    public static String objectToJson(Object o) throws Exception {
-        return o.getClass().getName() + ";" + gson.toJson(o);
-    }
-
-    public static Object jsonToObject(String json) throws Exception {
-        int firstSep = json.indexOf(";");
-        String classStr = json.substring(0, firstSep);
-        String dataStr = json.substring(firstSep + 1);
-        return gson.fromJson(dataStr, Class.forName(classStr));
-    }
-
-    public static String dataOutputToString(DataOutputBuffer dataOutput) throws IOException {
-        DataInputBuffer dataInput = new DataInputBuffer();
-        dataInput.reset(dataOutput.getData(), dataOutput.getLength());
-        return dataInput.readLine();
-    }
-
-    public static Object stringToObject(String s) throws Exception {
-        if (1==1) return jsonToObject(s);
-        //s = s.replaceAll("MOAR_BIGKOAR", "\"&#");
-        AnyObjectWritable w = new AnyObjectWritable();// stringToWritable(s);
-        byte[] data = Bytes.toBytes(s); //s.getBytes(OpParameterSerDe.charset);
-        DataInputBuffer buffer = new DataInputBuffer();
-        buffer.reset(data, data.length);
-        w.readFields(buffer);
-        return w.inst;
-    }
-
-
-    public static String writableToString(Writable w) throws Exception {
-        DataOutputBuffer buffer = new DataOutputBuffer();
-        w.write(buffer);
-        return w.getClass().getName() + ";" + new String(Arrays.trimToCapacity(buffer.getData(), buffer.getLength()), OpParameterSerDe.charset);
-    }
-
-    public static <T extends Writable> T stringToWritable(String s) throws Exception {
-        int firstSep = s.indexOf(";");
-        String classStr = s.substring(0, firstSep);
-        String dataStr = s.substring(firstSep + 1);
-        T w = (T) Class.forName(classStr).newInstance();
-        byte[] data = dataStr.getBytes(OpParameterSerDe.charset);
-        DataInputBuffer buffer = new DataInputBuffer();
-        buffer.reset(data, data.length);
-        w.readFields(buffer);
-        return w;
-    }
 
 
 

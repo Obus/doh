@@ -21,7 +21,7 @@ public class MapKVDataSetJsonSerDe implements JsonSerializer<MapKVDataSet>, Json
     @Override
     public MapKVDataSet deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         Path path = new Path(json.getAsJsonPrimitive().getAsString());
-        Context context1 = Context.create(conf, null);
+        Context context1 = Context.create(conf);
         MapKVDataSet mkvds = new MapKVDataSet(new HDFSLocation.SingleHDFSLocation(path));
         mkvds.setContext(context1);
         return mkvds;

@@ -5,6 +5,7 @@ import doh.op.serde.OpSerializer;
 import doh.op.WritableObjectDictionaryFactory;
 import doh.op.kvop.CompositeReduceOp;
 import doh.api.op.KV;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -33,10 +34,14 @@ public class CompositeReduceOpReducer
     private WritableObjectDictionaryFactory.WritableObjectDictionary<TO_KEY, WRITABLE_TO_KEY> toKeyDictionary;
     private WritableObjectDictionaryFactory.WritableObjectDictionary<TO_VALUE, WRITABLE_TO_VALUE> toValueDictionary;
 
+    private OpSerializer opSerializer;
+
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         try {
-            op = OpSerializer.loadCompositeReduceOpConf(context.getConfiguration());
+            Configuration conf = context.getConfiguration();
+            opSerializer = OpSerializer.create(conf);
+            op = opSerializer.loadCompositeReduceOpConf(context.getConfiguration());
             fromKeyDictionary = createDictionary(op.fromKeyClass());
             fromValueDictionary = createDictionary(op.fromValueClass());
             toKeyDictionary = createDictionary(op.toKeyClass());

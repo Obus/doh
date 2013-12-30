@@ -46,6 +46,16 @@ public class LazyKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         this.real = real;
     }
 
+    @Override
+    public void setContext(Context context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Context getContext() {
+        throw new UnsupportedOperationException();
+    }
+
     protected RealKVDataSet<Key, Value> real = null;
 
     public synchronized RealKVDataSet<Key, Value> real() {

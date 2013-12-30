@@ -1,0 +1,889 @@
+<configuration>
+    <!--                                 Common                                  -->
+    <property>
+        <name>rank.hbaseTable</name>
+        <value>rank</value>
+    </property>
+
+    <property>
+        <name>hbase.zookeeper.quorum</name>
+        <value>localhost</value>
+    </property>
+
+    <property>
+        <name>rank.pfp.max_heapsize</name>
+        <value>50</value>
+    </property>
+
+
+    <property>
+        <name>rank.pfp.numGroups</name>
+        <value>1000</value>
+    </property>
+
+    <property>
+        <name>rank.hbase.scan.caching</name>
+        <value>500</value>
+    </property>
+
+    <property>
+        <name>rank.pfp.maxPerGroup</name>
+        <value>0</value>
+    </property>
+
+    <property>
+        <name>rank.pfp.minSupport</name>
+        <value>3</value>
+    </property>
+
+    <property>
+        <name>rank.pfp.use_fpg2</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>recommender.locality.localityFactName</name>
+        <value>city</value>
+    </property>
+
+    <property>
+        <name>recommender.locality.daysToCount</name>
+        <value>30</value>
+    </property>
+
+    <property>
+        <name>recommender.locality.productMajority</name>
+        <value>0.5</value>
+    </property>
+
+    <property>
+        <name>recommender.locality.consumerThreshold</name>
+        <value>0.05</value>
+    </property>
+
+    <property>
+        <name>io.map.consumer-locality.map.cache_size</name>
+        <value>0</value>
+    </property>
+
+    <property>
+        <name>io.map.consumer-locality.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.product-rest.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.product-locality.map.cache_size</name>
+        <value>0</value>
+    </property>
+
+    <property>
+        <name>io.map.product-locality.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.group-id.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.group-id.map.cache_size</name>
+        <value>0</value>
+    </property>
+
+    <property>
+        <name>io.map.reverse.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.row-sum.map.cache_size</name>
+        <value>0</value>
+    </property>
+
+    <property>
+        <name>io.map.row-sum.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.item-id.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.item-id.map.cache_size</name>
+        <value>0</value>
+    </property>
+
+    <property>
+        <name>io.map.id-item.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.id-item.map.cache_size</name>
+        <value>0</value>
+    </property>
+
+    <property>
+        <name>io.map.user-id.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.user-id.map.cache_size</name>
+        <value>10000</value>
+    </property>
+
+    <property>
+        <name>io.map.id-user.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.id-user.map.cache_size</name>
+        <value>10000</value>
+    </property>
+
+    <property>
+        <name>io.map.term-denominator.map.full_load</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>io.map.term-denominator.map.cache_size</name>
+        <value>10000</value>
+    </property>
+
+    <property>
+        <name>recommender.locality.zeroConsumersFiltering</name>
+        <value>false</value>
+        <description>
+            describe whether consumers with zero localities should be filtered out in ResultsFilterReducer or not
+            true - filtered
+            false - not
+        </description>
+    </property>
+
+    <!--                                 Atomic                                  -->
+
+    <property>
+        <name>rank.atomic.intermediate.timeout</name>
+        <value>3600</value>
+    </property>
+
+    <property>
+        <name>rank.atomic.version.staleTimeout</name>
+        <value>3600</value>
+    </property>
+
+    <property>
+        <name>rank.atomic.version.hBaseRequestTimeout</name>
+        <value>5</value>
+    </property>
+
+    <property>
+        <name>rank.atomic.version.inProgressTimeout</name>
+        <value>100</value>
+    </property>
+
+    <!--                               Resolutions                               -->
+
+    <property>
+        <name>rank.statistics.garbageCollection.caching</name>
+        <value>-1</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.resolution.15min</name>
+        <value>900</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.resolution.15min.life</name>
+        <value>1209600</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.resolution.1hour</name>
+        <value>3600</value>
+    </property>
+    <property>
+        <name>rank.statistics.resolution.1hour.life</name>
+        <value>2419200</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.resolution.1day</name>
+        <value>86400</value>
+    </property>
+    <property>
+        <name>rank.statistics.resolution.1day.life</name>
+        <value>-1</value>
+    </property>
+
+    <!--                              Target Groups                              -->
+
+    <property>
+        <name>rank.TargetGroup.sigmas</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>rank.TargetGroup.itemFacts</name>
+        <value>product</value>
+    </property>
+    <property>
+        <name>rank.TargetGroup.keyFacts</name>
+        <value>goal,product,consumer</value>
+    </property>
+
+    <!--                               Coherence                                  -->
+
+    <property>
+        <name>rank.coherence.table</name>
+        <value>coherence</value>
+    </property>
+
+    <property>
+        <name>rank.coherence.family</name>
+        <value>one</value>
+    </property>
+
+    <property>
+        <name>rank.coherence.facts.simplateGoal</name>
+        <value>simplate,goal</value>
+    </property>
+
+    <property>
+        <name>rank.coherence.facts.simplateProduct</name>
+        <value>simplate,product</value>
+    </property>
+
+    <property>
+        <name>rank.coherence.facts.productSimplate</name>
+        <value>product,simplate</value>
+    </property>
+
+    <property>
+        <name>rank.coherence.facts.goalSimplate</name>
+        <value>goal,simplate</value>
+    </property>
+
+    <!--                              Count Counters                              -->
+
+    <property>
+        <name>rank.statistics.calculation.productCount.values</name>
+        <value>product</value>
+    </property>
+    <property>
+        <name>rank.statistics.calculation.productCount.method</name>
+        <value>count</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.calculation.goalCount.values</name>
+        <value>goal</value>
+    </property>
+    <property>
+        <name>rank.statistics.calculation.goalCount.method</name>
+        <value>count</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.calculation.simplateCount.values</name>
+        <value>simplate</value>
+    </property>
+    <property>
+        <name>rank.statistics.calculation.simplateCount.method</name>
+        <value>count</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.calculation.simplateGoalCount.values</name>
+        <value>simplate,goal</value>
+    </property>
+    <property>
+        <name>rank.statistics.calculation.simplateGoalCount.method</name>
+        <value>count</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.calculation.simplateProductCount.values</name>
+        <value>simplate,product</value>
+    </property>
+    <property>
+        <name>rank.statistics.calculation.simplateProductCount.method</name>
+        <value>count</value>
+    </property>
+
+
+    <!--                              Mean Counters                               -->
+
+    <property>
+        <name>rank.statistics.calculation.mean_amount_by_simplate.method</name>
+        <value>mean</value>
+    </property>
+    <property>
+        <name>rank.statistics.calculation.mean_amount_by_simplate.values</name>
+        <value>simplate,amount</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.calculation.mean_quantity_by_simplate.method</name>
+        <value>mean</value>
+    </property>
+    <property>
+        <name>rank.statistics.calculation.mean_quantity_by_simplate.values</name>
+        <value>simplate,quantity</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.calculation.mean_payment_by_simplate.method</name>
+        <value>mean</value>
+    </property>
+    <property>
+        <name>rank.statistics.calculation.mean_payment_by_simplate.values</name>
+        <value>simplate,payment</value>
+    </property>
+
+    <property>
+        <name>rank.statistics.calculation.mean_duration_by_simplate.method</name>
+        <value>mean</value>
+    </property>
+    <property>
+        <name>rank.statistics.calculation.mean_duration_by_simplate.values</name>
+        <value>simplate,duration</value>
+    </property>
+
+
+    <!--                              Grouping 'or'                               -->
+
+    <property>
+        <descriptionT>comma-separated names of facts should be clustered</descriptionT>
+        <name>rank.grouping.prepare.allowedFacts</name>
+        <value>product</value>
+    </property>
+
+    <property>
+        <descriptionT>
+            should and connections used in calculations or not, if not all this properties won't be counted:
+            rank.grouping.prepare.ratio.andOrUpper
+            rank.grouping.prepare.ratio.andOrLower
+        </descriptionT>
+        <name>rank.grouping.useAnds</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <descriptionT>
+            pseudo-maximum cluster size
+            prevents out of memory error
+        </descriptionT>
+        <name>rank.grouping.clusterMaxSize</name>
+        <value>500</value>
+    </property>
+
+    <property>
+        <descriptionT>
+            name of weights aggregation function. It used to aggregate two adjacent vertexes weights into one new weight
+        </descriptionT>
+        <name>rank.grouping.prepare.weightsBinFoo</name>
+        <value>avg</value>
+    </property>
+
+    <property>
+        <descriptionT>
+            bound of OR connections: if ( and / or less than $value ) than connection handled as OR connection
+        </descriptionT>
+        <name>rank.grouping.prepare.ratio.andOrUpper</name>
+        <value>10.0</value>
+    </property>
+
+    <property>
+        <descriptionT>
+            bound of AND connections: if ( and / or > $value ) than connection handled as AND connection
+        </descriptionT>
+        <name>rank.grouping.prepare.ratio.andOrLower</name>
+        <value>1.0</value>
+    </property>
+
+    <property>
+        <descriptionT>
+            some math: from all connections of some node their length mean and sd (standard deviance) calculated
+            only those connections having ( connection length > mean + sd * $value ) passed further
+        </descriptionT>
+        <name>rank.grouping.prepare.ratio.takeIntoAccount</name>
+        <value>0.0</value>
+    </property>
+
+    <property>
+        <descriptionT>
+            number of combinations
+        </descriptionT>
+        <name>rank.grouping.iterations</name>
+        <value>10</value>
+    </property>
+
+    <property>
+        <descriptionT>
+            output folder for clusters
+        </descriptionT>
+        <name>rank.grouping.output</name>
+        <value>clusters</value>
+    </property>
+
+    <property>
+        <descriptionT>
+            should write clusters statistic to file or not
+        </descriptionT>
+        <name>rank.grouping.writeStats</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>recommender.pfp.keyFacts</name>
+        <value>consumer</value>
+    </property>
+
+    <property>
+        <name>recommender.pfp.itemFacts</name>
+        <value>product</value>
+    </property>
+
+    <property>
+        <name>rank.recommender.itemsPath</name>
+        <value>/def_acc/recommendation_items.txt</value>
+    </property>
+
+    <property>
+        <name>rank.recommender.usersPath</name>
+        <value>/def_acc/recommendation_users.txt</value>
+    </property>
+
+    <property>
+        <name>recommender.numRecommendations</name>
+        <value>10</value>
+    </property>
+
+    <property>
+        <name>recommender.maxPrefsPerUser</name>
+        <value>50</value>
+    </property>
+
+    <property>
+        <name>recommender.minPrefsPerUser</name>
+        <value>1</value>
+    </property>
+
+    <property>
+        <name>recommender.maxSimilaritiesPerItem</name>
+        <value>100</value>
+    </property>
+
+    <property>
+        <name>recommender.maxPrefsPerUserInItemSimilarity</name>
+        <value>1000</value>
+    </property>
+
+    <property>
+        <name>recommender.similarityClassname</name>
+        <value>SIMILARITY_PEARSON_CORRELATION</value>
+    </property>
+
+
+    <!--                        cluster                          -->
+
+
+    <!--                        spaces                           -->
+    <property>
+        <name>rank.cluster.spaces</name>
+        <value>groupsProportion</value>
+        <description>comma-separated set of spaces names to cluster.</description>
+    </property>
+
+
+    <property>
+        <name>rank.cluster.space.moneyAvg.createPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.MoneyAvgGroupsProportionSpace</value>
+        <description>average money per group create phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.moneyAvgClassic.createPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.MoneyAvgGroupsProportionSpace</value>
+        <description>average money per group create phase</description>
+    </property>
+    <property>
+        <name>rank.cluster.space.moneyAvgClassic.normPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.NormalizeSpacePhase</value>
+        <description>average money per group normalize phase</description>
+    </property>
+    <property>
+        <name>rank.cluster.space.moneyAvgClassic.normPhase.idf</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.IDF$ClassicIDF</value>
+        <description>average money per group normalize phase idf property</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.moneySum.createPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.MoneySumGroupsProportionSpace</value>
+        <description>sum money per group create phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.moneySumClassic.createPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.MoneySumGroupsProportionSpace</value>
+        <description>sum money per group create phase</description>
+    </property>
+    <property>
+        <name>rank.cluster.space.moneySumClassic.normPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.NormalizeSpacePhase</value>
+        <description>sum money per group normalize phase</description>
+    </property>
+    <property>
+        <name>rank.cluster.space.moneySumClassic.normPhase.idf</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.IDF$ClassicIDF</value>
+        <description>sum money per group normalize phase idf property</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.intervalsNoIDF.createPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.IntervalSpace</value>
+        <description>intervalsNoIDF create phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.intervalsNoIDF.peaks.breaks</name>
+        <value>50</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.intervalsNoIDF.peaks.sigma2</name>
+        <value>0.1</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.intervalsNoIDF.peaks.bandwidth</name>
+        <value>2</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.intervalsNoIDF.intervals.facts</name>
+        <value>temperature,cloud,precipitation</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.intervalsNoIDF.normPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.NormalizeSpacePhase</value>
+        <description>intervalsNoIDF normalize phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.intervalsNoIDF.normPhase.idf</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.IDF$NoIDF</value>
+        <description>intervalsNoIDF normalize phase idf property</description>
+    </property>
+
+
+    <property>
+        <name>rank.cluster.space.itemsProportion.createPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.ItemsProportionSpace</value>
+        <description>itemsProportion create phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.itemsProportion.normPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.NormalizeSpacePhase</value>
+        <description>itemsProportion normalize phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.itemsProportion.normPhase.idf</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.IDF$NoIDF</value>
+        <description>itemsProportion normalize phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.groupsProportion.createPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.GroupsProportionSpace</value>
+        <description>groupsProportion create phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.groupsProportion.normPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.NormalizeSpacePhase</value>
+        <description>groupsProportion normalize phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.groupsProportion.normPhase.idf</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.IDF$NoIDF</value>
+        <description>groupsProportion normalize phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.classicIDFGroupsProportion.createPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.GroupsProportionSpace</value>
+        <description>classicIDFGroupsProportion create phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.classicIDFGroupsProportion.normPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.NormalizeSpacePhase</value>
+        <description>classicIDFGroupsProportion normalize phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.classicIDFGroupsProportion.normPhase.idf</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.IDF$ClassicIDF</value>
+        <description>classicIDFGroupsProportion normalize phase</description>
+    </property>
+
+
+    <property>
+        <name>rank.cluster.space.frequencyIDFGroupsProportion.createPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.GroupsProportionSpace</value>
+        <description>frequencyIDFGroupsProportion create phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.frequencyIDFGroupsProportion.normPhase</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.NormalizeSpacePhase</value>
+        <description>frequencyIDFGroupsProportion normalize phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.frequencyIDFGroupsProportion.normPhase.idf</name>
+        <value>com.synqera.bigkore.rank.cluster.spaces.IDF$FrequencyIDF</value>
+        <description>frequencyIDFGroupsProportion normalize phase</description>
+    </property>
+
+
+    <!--                        intervals default                        -->
+
+    <property>
+        <name>rank.cluster.space.intervalsNoIDF.peaks.breaks</name>
+        <value>50</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.intervalsNoIDF.peaks.sigma2</name>
+        <value>0.1</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.space.intervalsNoIDF.peaks.bandwidth</name>
+        <value>2</value>
+    </property>
+
+
+    <!--                       cluster default                           -->
+
+    <property>
+        <name>rank.cluster.chooseK.criteria.fdist</name>
+        <value>0.99</value>
+        <description>cumulative probability for quantile calculation
+            if F value is greater than corresponding quantile, K selected as number of clusters
+        </description>
+    </property>
+
+
+    <property>
+        <name>rank.cluster.chooseK.criteria.elbow</name>
+        <value>0.5</value>
+        <description>parameter for "elbow criteria"
+            minimum rate of "explained variance" change,
+            if that rate is less than specified value, (K - 1) selected as number of clusters
+        </description>
+    </property>
+
+    <property>
+        <name>rank.cluster.chooseK.maxK</name>
+        <value>5,4</value>
+        <description>maximum number of clusters at chooseK phase</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.chooseK.returnBest</name>
+        <value>false</value>
+        <description>return best clusterization between init_step and maxK when fair f-criteria test</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.minRelativeSize</name>
+        <value>0.01</value>
+        <description>minimum size of cluster</description>
+    </property>
+
+    <property>
+        <name>rank.cluster.max_iteration</name>
+        <value>5</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.delta</name>
+        <value>0.025</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.acceptProbability</name>
+        <value>0.001</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.clusterClassificationThreshold</name>
+        <value>0</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.DistanceMeasure</name>
+        <value>org.apache.mahout.common.distance.TanimotoDistanceMeasure</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.initClustersJob</name>
+        <value>com.synqera.bigkore.rank.cluster.initcenter.LongDistanceInitClustersJob</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.maxLevels</name>
+        <value>1</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.runSequential</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.topdown.pool_size</name>
+        <value>30</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.spaces.pool_size</name>
+        <value>5</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.ChooseKPhase.init_step</name>
+        <value>2</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.ChooseKPhase.step</name>
+        <value>2</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.ChooseKPhase.max_per_iteration</name>
+        <value>16</value>
+    </property>
+
+    <property>
+        <name>rank.cluster.ChooseKPhase.max_per_iteration_overhead</name>
+        <value>1.5</value>
+    </property>
+
+    <!--                        compression                         -->
+
+
+    <property>
+        <name>mapred.output.compress</name>
+        <value>true</value>
+        <description>Should the job outputs be compressed?
+        </description>
+    </property>
+
+    <property>
+        <name>mapred.output.compression.type</name>
+        <value>BLOCK</value>
+        <description>If the job outputs are to compressed as SequenceFiles, how should
+            they be compressed? Should be one of NONE, RECORD or BLOCK.
+        </description>
+    </property>
+
+    <property>
+        <name>mapred.output.compression.codec</name>
+        <value>com.synqera.hadoop.io.compress.SnappyCodec</value>
+        <description>If the job outputs are compressed, how should they be compressed?
+        </description>
+    </property>
+
+    <property>
+        <name>mapred.compress.map.output</name>
+        <value>true</value>
+        <description>Should the outputs of the maps be compressed before being
+            sent across the network. Uses SequenceFile compression.
+        </description>
+    </property>
+
+    <property>
+        <name>mapred.map.output.compression.codec</name>
+        <value>com.synqera.hadoop.io.compress.SnappyCodec</value>
+        <description>If the map outputs are compressed, how should they be
+            compressed?
+        </description>
+    </property>
+
+    <property>
+        <name>mapred.job.reuse.jvm.num.tasks</name>
+        <value>-1</value>
+    </property>
+
+    <property>
+        <name>rank.hive.totalRetail.table</name>
+        <value>total_retail</value>
+    </property>
+
+
+    <!--                        shop list                             -->
+
+    <property>
+        <description>shopping list max length including auxiliary facts and consumer</description>
+        <name>rank.shoplist.maxLength</name>
+        <value>10</value>
+    </property>
+
+    <!--                            phases                                  -->
+
+    <property>
+        <name>rank.phases.pool_size</name>
+        <value>7</value>
+    </property>
+
+
+
+
+    <property>
+        <name>rank.shopList.mode</name>
+        <value>avgTopK</value>
+    </property>
+    <property>
+        <name>rank.shopList.mode.a*sigma</name>
+        <value>1.5</value>
+    </property>
+    <property>
+        <name>rank.shopList.mode.topK</name>
+        <value>10</value>
+    </property>
+    <property>
+        <name>rank.shopList.mode.avgTopK</name>
+        <value>10</value>
+    </property>
+    <property>
+        <name>rank.shopList.productsInGroup</name>
+        <value>10</value>
+    </property>
+    <property>
+        <name>rank.shopList.basket.useConditions</name>
+        <value>false</value>
+    </property>
+
+</configuration>

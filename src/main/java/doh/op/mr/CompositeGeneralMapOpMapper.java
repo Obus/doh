@@ -15,10 +15,7 @@ import java.io.IOException;
 import static doh.op.WritableObjectDictionaryFactory.createDictionary;
 
 
-import static doh.op.serde.OpSerializer.loadMapInputKeyClassFromConf;
-import static doh.op.serde.OpSerializer.loadMapInputValueClassFromConf;
-import static doh.op.serde.OpSerializer.loadMapOutputKeyClassFromConf;
-import static doh.op.serde.OpSerializer.loadMapOutputValueClassFromConf;
+
 
 public class CompositeGeneralMapOpMapper <
         WRITABLE_FROM_KEY extends WritableComparable,
@@ -37,16 +34,18 @@ public class CompositeGeneralMapOpMapper <
     private WritableObjectDictionaryFactory.WritableObjectDictionary<FROM_VALUE, WRITABLE_FROM_VALUE> fromValueDictionary;
     private WritableObjectDictionaryFactory.WritableObjectDictionary<TO_KEY, WRITABLE_TO_KEY> toKeyDictionary;
     private WritableObjectDictionaryFactory.WritableObjectDictionary<TO_VALUE, WRITABLE_TO_VALUE> toValueDictionary;
+    private OpSerializer opSerializer;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         try {
             Configuration conf = context.getConfiguration();
-            op = OpSerializer.loadCompositeMapOpConf(conf);
-            fromKeyDictionary = createDictionary(loadMapInputKeyClassFromConf(conf));
-            fromValueDictionary = createDictionary(loadMapInputValueClassFromConf(conf));
-            toKeyDictionary = createDictionary(loadMapOutputKeyClassFromConf(conf));
-            toValueDictionary = createDictionary(loadMapOutputValueClassFromConf(conf));
+            opSerializer = OpSerializer.create(conf);
+            op = opSerializer.loadCompositeMapOpConf(conf);
+            fromKeyDictionary = createDictionary(opSerializer.loadMapInputKeyClassFromConf(conf));
+            fromValueDictionary = createDictionary(opSerializer.loadMapInputValueClassFromConf(conf));
+            toKeyDictionary = createDictionary(opSerializer.loadMapOutputKeyClassFromConf(conf));
+            toValueDictionary = createDictionary(opSerializer.loadMapOutputValueClassFromConf(conf));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
