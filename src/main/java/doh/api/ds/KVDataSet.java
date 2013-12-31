@@ -2,7 +2,7 @@ package doh.api.ds;
 
 import doh.ds.DataSet;
 import doh.ds.MapKVDataSet;
-import doh.op.Context;
+import doh.api.Context;
 import doh.op.Op;
 import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
@@ -20,7 +20,7 @@ public interface KVDataSet<KEY, VALUE> extends Iterable<KV<KEY, VALUE>>, DataSet
 
     boolean isReady();
 
-    void beReady() throws Exception ;
+    KVDataSet<KEY, VALUE> beReady() throws Exception ;
 
     KVDataSet<KEY, VALUE> comeTogetherRightNow(KVDataSet<KEY, VALUE> other);
 

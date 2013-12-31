@@ -1,6 +1,8 @@
 package doh.op;
 
+import doh.api.Context;
 import doh.api.OpParameter;
+import doh.api.TempPathManager;
 import doh.api.ds.HDFSLocation;
 import doh.ds.RealKVDataSet;
 import doh.api.op.KV;

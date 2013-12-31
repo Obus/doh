@@ -1,6 +1,7 @@
 package doh.ds;
 
 import com.synqera.bigkore.rank.PlatformUtils;
+import doh.api.Context;
 import doh.api.ds.HDFSLocation;
 import doh.api.ds.KVDataSet;
 import doh.api.ds.KVDataSetFactory;
@@ -9,12 +10,12 @@ import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
 import doh.api.op.ReduceOp;
+import doh.api.op.ValueOnlyReduceOp;
 import doh.op.*;
 import doh.op.kvop.*;
 import doh.op.mr.FlatMapOpMapper;
 import doh.op.mr.MapOpMapper;
 import doh.op.mr.ReduceOpReducer;
-import doh.op.serde.OpSerializer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
@@ -62,8 +63,8 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     @Override
-    public void beReady() {
-        // always ready
+    public RealKVDataSet<Key, Value> beReady() {
+        return this;// always ready
     }
 
     @Override

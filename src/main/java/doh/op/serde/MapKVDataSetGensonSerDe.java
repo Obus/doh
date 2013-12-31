@@ -27,7 +27,7 @@ public class MapKVDataSetGensonSerDe implements Converter<MapKVDataSet> {
         String pathStr = reader.beginObject().valueAsString();
         reader.endObject();
         Path path = new Path(pathStr);
-        doh.op.Context context1 = doh.op.Context.create(conf);
+        doh.api.Context context1 = doh.api.Context.create(conf);
         MapKVDataSet mkvds = new MapKVDataSet(new HDFSLocation.SingleHDFSLocation(path));
         mkvds.setContext(context1);
         return mkvds;

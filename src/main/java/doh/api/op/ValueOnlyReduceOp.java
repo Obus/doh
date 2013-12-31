@@ -1,4 +1,4 @@
-package doh.op;
+package doh.api.op;
 
 import doh.api.op.KV;
 import doh.api.op.ReduceOp;

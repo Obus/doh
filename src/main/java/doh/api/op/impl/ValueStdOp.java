@@ -3,7 +3,7 @@ package doh.api.op.impl;
 import com.synqera.bigkore.model.fact.Consumer;
 import doh.ds.MapKVDataSet;
 import doh.api.OpParameter;
-import doh.op.ValueOnlyReduceOp;
+import doh.api.op.ValueOnlyReduceOp;
 
 public class ValueStdOp<Key> extends ValueOnlyReduceOp<Key, Long, Double> {
     @OpParameter

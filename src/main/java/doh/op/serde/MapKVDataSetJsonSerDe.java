@@ -9,7 +9,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import doh.api.ds.HDFSLocation;
 import doh.ds.MapKVDataSet;
-import doh.op.Context;
+import doh.api.Context;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 

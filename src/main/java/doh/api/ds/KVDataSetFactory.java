@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import doh.ds.LazyKVDataSet;
 import doh.ds.MapKVDataSet;
 import doh.ds.RealKVDataSet;
-import doh.op.Context;
+import doh.api.Context;
 import org.apache.hadoop.fs.Path;
 
 import java.util.Arrays;

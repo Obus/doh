@@ -1,7 +1,7 @@
 package doh.api.op.impl;
 
 import com.synqera.bigkore.model.fact.Consumer;
-import doh.op.ValueOnlyReduceOp;
+import doh.api.op.ValueOnlyReduceOp;
 
 public class ValueAvgOp<Key> extends ValueOnlyReduceOp<Key, Long, Double> {
     @Override

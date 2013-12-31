@@ -8,11 +8,10 @@ import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
 import doh.api.op.ReduceOp;
-import doh.op.Context;
+import doh.api.Context;
 import doh.op.Op;
 import doh.op.kvop.*;
 import doh.op.mr.LazyKVDataSetReadyMaker;
-import org.apache.hadoop.fs.Path;
 import org.apache.mahout.common.Pair;
 
 import java.io.IOException;
@@ -78,8 +77,9 @@ public class LazyKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     @Override
-    public synchronized void beReady() throws Exception {
+    public synchronized LazyKVDataSet<Key, Value> beReady() throws Exception {
         new LazyKVDataSetReadyMaker(this).makeItReady();
+        return this;
     }
 
 

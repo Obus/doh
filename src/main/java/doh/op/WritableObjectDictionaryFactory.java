@@ -1,28 +1,16 @@
 package doh.op;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.owlike.genson.Genson;
-import doh.ds.MapKVDataSet;
-import doh.op.kvop.CompositeReduceOp;
 import doh.api.op.FlatMapOp;
 import doh.op.kvop.KVOp;
 import doh.api.op.MapOp;
 import doh.api.op.ReduceOp;
-import doh.op.serde.CompositeReduceOpJsonSerDe;
-import doh.op.serde.MapKVDataSetGensonSerDe;
-import doh.op.serde.MapKVDataSetJsonSerDe;
-import doh.op.serde.OpSequenceJsonSerDe;
 import doh.op.serde.OpSerializer;
 import doh.op.utils.ReflectionUtils;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
-import org.apache.mahout.math.Arrays;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -31,6 +19,7 @@ import static doh.op.utils.ClassUtils.*;
 
 
 public class WritableObjectDictionaryFactory {
+
     public interface WritableObjectDictionary<O, W extends Writable> {
         public O getObject(W writable);
 
@@ -53,9 +42,7 @@ public class WritableObjectDictionaryFactory {
         if (String.class.isAssignableFrom(clazz)) {
             return (WritableObjectDictionary<O, W>) new StringWOD();
         }
-//        if (isSimpleKVOpClass(clazz)) {
-//
-//        }
+
         throw new UnsupportedOperationException("Unknown class: " + clazz);
     }
 
