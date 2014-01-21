@@ -1,7 +1,7 @@
 package doh.api.op.impl;
 
 import com.synqera.bigkore.model.fact.Consumer;
-import doh.ds.MapKVDataSet;
+import doh.ds.MapKVDS;
 
 public class OpFactory {
     public static RawUSToConsumerPaymentsOp rawUserStoryToConsumerPayments() {
@@ -12,7 +12,7 @@ public class OpFactory {
         return new ValueAvgOp.ConsumerValuesAvgOp();
     }
 
-    public static ValueStdOp.ConsumerValuesStdOp valuesStd(MapKVDataSet<Consumer, Double> keysAvg) {
+    public static ValueStdOp.ConsumerValuesStdOp valuesStd(MapKVDS<Consumer, Double> keysAvg) {
         ValueStdOp.ConsumerValuesStdOp op = new ValueStdOp.ConsumerValuesStdOp();
         op.keysAvg = keysAvg;
         return op;

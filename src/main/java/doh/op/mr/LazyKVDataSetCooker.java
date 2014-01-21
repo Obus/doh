@@ -2,15 +2,15 @@ package doh.op.mr;
 
 import com.google.common.collect.Lists;
 import doh.api.ds.HDFSLocation;
-import doh.ds.LazyKVDataSet;
-import doh.ds.RealKVDataSet;
-import doh.op.kvop.CompositeMapOp;
-import doh.op.kvop.CompositeReduceOp;
 import doh.api.op.FlatMapOp;
-import doh.op.kvop.KVOp;
-import doh.op.kvop.KVUnoOp;
 import doh.api.op.MapOp;
 import doh.api.op.ReduceOp;
+import doh.ds.LazyKVDS;
+import doh.ds.RealKVDS;
+import doh.op.kvop.CompositeMapOp;
+import doh.op.kvop.CompositeReduceOp;
+import doh.op.kvop.KVOp;
+import doh.op.kvop.KVUnoOp;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -20,15 +20,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class LazyKVDataSetReadyMaker {
+public class LazyKVDataSetCooker {
 
 
     public static class ParentOpChild {
-        private final LazyKVDataSet parent;
+        private final LazyKVDS parent;
         private final KVOp op;
-        private final LazyKVDataSet child;
+        private final LazyKVDS child;
 
-        private ParentOpChild(LazyKVDataSet parent, KVOp op, LazyKVDataSet child) {
+        private ParentOpChild(LazyKVDS parent, KVOp op, LazyKVDS child) {
             this.parent = parent;
             this.op = op;
             this.child = child;
@@ -37,37 +37,37 @@ public class LazyKVDataSetReadyMaker {
 
     private final List<ParentOpChild> dataSetPath;
 
-    public LazyKVDataSetReadyMaker(LazyKVDataSet lazy) {
+    public LazyKVDataSetCooker(LazyKVDS lazy) {
         dataSetPath = Lists.newArrayList();
-        LazyKVDataSet child = lazy;
+        LazyKVDS child = lazy;
         while (! child.isReady()) {
             dataSetPath.add(0, new ParentOpChild(child.getParentDataSet(), child.getParentOperation(), child));
             child = child.getParentDataSet();
         }
     }
 
-    public void makeItReady() throws Exception {
-        RealKVDataSet origin = dataSetPath.get(0).parent.real();
+    public void cookIt() throws Exception {
+        RealKVDS origin = dataSetPath.get(0).parent.real();
 
-        Pair<LazyKVDataSet, Job> lazyJobPair;
+        Pair<LazyKVDS, Job> lazyJobPair;
         Iterator<ParentOpChild> parentOpChildIt = dataSetPath.iterator();
 
         while ((lazyJobPair = nextJob(parentOpChildIt)) != null) {
             Path outputPath = FileOutputFormat.getOutputPath(lazyJobPair.getSecond());
             origin.getContext().runJob(lazyJobPair.getSecond());
-            RealKVDataSet real = new RealKVDataSet(new HDFSLocation.SingleHDFSLocation(outputPath));
+            RealKVDS real = new RealKVDS(new HDFSLocation.SingleHDFSLocation(outputPath));
             real.setContext(origin.getContext());
             lazyJobPair.getFirst().setReal(real);
         }
     }
 
-    private Pair<LazyKVDataSet, Job> nextJob(Iterator<ParentOpChild> it) throws Exception {
+    private Pair<LazyKVDS, Job> nextJob(Iterator<ParentOpChild> it) throws Exception {
         if (!it.hasNext()) {
             return null;
         }
 
         ParentOpChild first = it.next();
-        RealKVDataSet origin = first.parent.real();
+        RealKVDS origin = first.parent.real();
 
         ParentOpChild current = first;
 
@@ -76,7 +76,7 @@ public class LazyKVDataSetReadyMaker {
             compositeMapperOpSequence.add((KVUnoOp) current.op);
             if (!it.hasNext()) {
                 Job job = mapOnlyJob(origin, compositeMapperOpSequence);
-                return new Pair<LazyKVDataSet, Job>(current.child, job);
+                return new Pair<LazyKVDS, Job>(current.child, job);
             }
             current = it.next();
         }
@@ -102,11 +102,11 @@ public class LazyKVDataSetReadyMaker {
         }
 
         Job job = mapReduceJob(origin, compositeMapperOpSequence, reduceOp, compositeReducerOpSequence);
-        return new Pair<LazyKVDataSet, Job>(current.child, job);
+        return new Pair<LazyKVDS, Job>(current.child, job);
     }
 
 
-    private Job mapReduceJob(RealKVDataSet origin, List<KVUnoOp> compositeMapperOpSequence, ReduceOp reduceOp, List<KVUnoOp> compositeReducerOpSequence) throws Exception {
+    private Job mapReduceJob(RealKVDS origin, List<KVUnoOp> compositeMapperOpSequence, ReduceOp reduceOp, List<KVUnoOp> compositeReducerOpSequence) throws Exception {
         if (compositeMapperOpSequence.isEmpty()) {
             if (compositeReducerOpSequence.isEmpty()) {
                 return KVOpJobUtils.createReduceOnlyJob(origin, reduceOp);
@@ -128,7 +128,7 @@ public class LazyKVDataSetReadyMaker {
         }
     }
 
-    private Job mapOnlyJob(RealKVDataSet origin, List<KVUnoOp> mapperOpSequence) throws Exception {
+    private Job mapOnlyJob(RealKVDS origin, List<KVUnoOp> mapperOpSequence) throws Exception {
         if (mapperOpSequence.isEmpty()) {
             throw new IllegalArgumentException("No mapper operations");
         }

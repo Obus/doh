@@ -3,7 +3,7 @@ package doh.op;
 import com.google.common.base.Splitter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import doh.ds.MapKVDataSet;
+import doh.ds.MapKVDS;
 import doh.op.kvop.CompositeReduceOp;
 import doh.op.serde.CompositeReduceOpJsonSerDe;
 import doh.op.serde.MapKVDataSetJsonSerDe;
@@ -16,7 +16,9 @@ import java.util.List;
 
 public abstract class StringSerDe {
     public abstract <T> String serialize(T o) throws Exception;
+
     public abstract <T> T deserialize(String s) throws Exception;
+
     public abstract String serializeSelf() throws Exception;
 
     public static StringSerDe deserializeSerDe(String s) throws Exception {
@@ -30,18 +32,18 @@ public abstract class StringSerDe {
                 customTypeAdapters.add(new Pair<Class, Object>(type, serDe));
             }
             return new GsonStringSerDe(customTypeAdapters);
-        }
-        else {
+        } else {
             throw new IllegalArgumentException();
         }
     }
 
-    public static class GsonStringSerDe extends StringSerDe{
+    public static class GsonStringSerDe extends StringSerDe {
         private final static List<Pair<Class, Object>> defaultTypeAdapters;
+
         static {
             defaultTypeAdapters = new ArrayList<Pair<Class, Object>>();
             defaultTypeAdapters.add(new Pair<Class, Object>(OpSequence.class, new OpSequenceJsonSerDe()));
-            defaultTypeAdapters.add(new Pair<Class, Object>(MapKVDataSet.class, new MapKVDataSetJsonSerDe()));
+            defaultTypeAdapters.add(new Pair<Class, Object>(MapKVDS.class, new MapKVDataSetJsonSerDe()));
             defaultTypeAdapters.add(new Pair<Class, Object>(CompositeReduceOp.class, new CompositeReduceOpJsonSerDe()));
         }
 
@@ -90,7 +92,6 @@ public abstract class StringSerDe {
             String dataStr = json.substring(firstSep + 1);
             return (T) gson.fromJson(dataStr, Class.forName(classStr));
         }
-
 
 
     }

@@ -1,21 +1,20 @@
 package doh.op.mr;
 
 import doh.api.ds.HDFSLocation;
-import doh.api.ds.KVDataSet;
-import doh.ds.RealKVDataSet;
-import doh.op.serde.OpSerializer;
+import doh.api.ds.KVDS;
+import doh.api.op.FlatMapOp;
+import doh.api.op.MapOp;
+import doh.api.op.ReduceOp;
+import doh.ds.RealKVDS;
 import doh.op.kvop.CompositeMapOp;
 import doh.op.kvop.CompositeReduceOp;
-import doh.api.op.FlatMapOp;
 import doh.op.kvop.KVUnoOp;
-import doh.api.op.MapOp;
 import doh.op.kvop.OpKVTransformer;
-import doh.api.op.ReduceOp;
+import doh.op.serde.OpSerializer;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-
 
 import static doh.op.WritableObjectDictionaryFactory.getWritableClass;
 import static doh.op.utils.ReflectionUtils.isUnknown;
@@ -23,26 +22,24 @@ import static doh.op.utils.ReflectionUtils.isUnknown;
 public class KVOpJobUtils {
 
 
-    private static HDFSLocation hdfsLocation(RealKVDataSet origin) {
+    private static HDFSLocation hdfsLocation(RealKVDS origin) {
         if (origin.getLocation().isHDFS()) {
             return (HDFSLocation) origin.getLocation();
         }
         throw new UnsupportedOperationException();
     }
 
-    private static Path[] paths(RealKVDataSet origin) {
+    private static Path[] paths(RealKVDS origin) {
         if (hdfsLocation(origin).isSingle()) {
-            return new Path[] {((HDFSLocation.SingleHDFSLocation)hdfsLocation(origin)).getPath()};
-        }
-        else if (!hdfsLocation(origin).isSingle()) {
-            return ((HDFSLocation.MultyHDFSLocation)hdfsLocation(origin)).getPaths();
-        }
-        else {
+            return new Path[]{((HDFSLocation.SingleHDFSLocation) hdfsLocation(origin)).getPath()};
+        } else if (!hdfsLocation(origin).isSingle()) {
+            return ((HDFSLocation.MultyHDFSLocation) hdfsLocation(origin)).getPaths();
+        } else {
             throw new IllegalStateException();
         }
     }
 
-    public static Job createCompositeMapReduceJob(RealKVDataSet origin, CompositeMapOp compositeMapOp, ReduceOp reduceOp) throws Exception {
+    public static Job createCompositeMapReduceJob(RealKVDS origin, CompositeMapOp compositeMapOp, ReduceOp reduceOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Composite map simple reduce job");
         configureJob(job, origin, compositeMapOp, reduceOp);
         FileInputFormat.setInputPaths(job, paths(origin));
@@ -50,7 +47,7 @@ public class KVOpJobUtils {
         return job;
     }
 
-    public static Job createCompositeMapCompositeReduceJob(RealKVDataSet origin, CompositeMapOp compositeMapOp, CompositeReduceOp compositeReduceOp) throws Exception {
+    public static Job createCompositeMapCompositeReduceJob(RealKVDS origin, CompositeMapOp compositeMapOp, CompositeReduceOp compositeReduceOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Composite map simple reduce job");
         configureJob(job, origin, compositeMapOp, compositeReduceOp);
         FileInputFormat.setInputPaths(job, paths(origin));
@@ -58,7 +55,7 @@ public class KVOpJobUtils {
         return job;
     }
 
-    public static Job createReduceOnlyJob(RealKVDataSet origin, ReduceOp reduceOp) throws Exception {
+    public static Job createReduceOnlyJob(RealKVDS origin, ReduceOp reduceOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Simple reduce only job");
         configureJob(job, origin, reduceOp);
         FileInputFormat.setInputPaths(job, paths(origin));
@@ -66,7 +63,7 @@ public class KVOpJobUtils {
         return job;
     }
 
-    public static Job createCompositeReduceOnlyJob(RealKVDataSet origin, CompositeReduceOp compositeReduceOp) throws Exception {
+    public static Job createCompositeReduceOnlyJob(RealKVDS origin, CompositeReduceOp compositeReduceOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Composite reduce only job");
         configureJob(job, origin, compositeReduceOp);
         FileInputFormat.setInputPaths(job, paths(origin));
@@ -74,7 +71,7 @@ public class KVOpJobUtils {
         return job;
     }
 
-    public static Job createCompositeMapOnlyJob(RealKVDataSet origin, CompositeMapOp compositeMapOp) throws Exception {
+    public static Job createCompositeMapOnlyJob(RealKVDS origin, CompositeMapOp compositeMapOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Composite map only job");
         configureJob(job, origin, compositeMapOp);
         FileInputFormat.setInputPaths(job, paths(origin));
@@ -82,7 +79,7 @@ public class KVOpJobUtils {
         return job;
     }
 
-    public static Job createMapOnlyJob(RealKVDataSet origin, MapOp compositeMapOp) throws Exception {
+    public static Job createMapOnlyJob(RealKVDS origin, MapOp compositeMapOp) throws Exception {
         Job job = new Job(origin.getContext().getConf(), "Map only job");
         configureJob(job, origin, compositeMapOp);
         FileInputFormat.setInputPaths(job, paths(origin));
@@ -91,25 +88,25 @@ public class KVOpJobUtils {
     }
 
 
-    public static void configureJob(Job job, KVDataSet origin, FlatMapOp flatMapOp) throws Exception {
+    public static void configureJob(Job job, KVDS origin, FlatMapOp flatMapOp) throws Exception {
         origin.getContext().opSerializer().saveFlatMapOpToConf(job.getConfiguration(), flatMapOp);
         job.setMapperClass(MapOpMapper.class);
         setKeyValueClassesBasedOnMap(job, origin, flatMapOp);
     }
 
-    public static void configureJob(Job job, KVDataSet origin, MapOp mapOp) throws Exception {
+    public static void configureJob(Job job, KVDS origin, MapOp mapOp) throws Exception {
         origin.getContext().opSerializer().saveMapOpToConf(job.getConfiguration(), mapOp);
         job.setMapperClass(MapOpMapper.class);
         setKeyValueClassesBasedOnMap(job, origin, mapOp);
     }
 
-    public static void configureJob(Job job, KVDataSet origin, ReduceOp reduceOp) throws Exception{
+    public static void configureJob(Job job, KVDS origin, ReduceOp reduceOp) throws Exception {
         origin.getContext().opSerializer().saveReduceOpToConf(job.getConfiguration(), reduceOp);
         job.setReducerClass(ReduceOpReducer.class);
         setKeyValueClassesBasedOnReduce(job, origin, reduceOp);
     }
 
-    public static void configureJob(Job job, KVDataSet origin, MapOp mapOp, ReduceOp reduceOp) throws Exception{
+    public static void configureJob(Job job, KVDS origin, MapOp mapOp, ReduceOp reduceOp) throws Exception {
         origin.getContext().opSerializer().saveMapOpToConf(job.getConfiguration(), mapOp);
         job.setMapperClass(FlatMapOpMapper.class);
         origin.getContext().opSerializer().saveReduceOpToConf(job.getConfiguration(), reduceOp);
@@ -118,7 +115,7 @@ public class KVOpJobUtils {
 
     }
 
-    public static void configureJob(Job job, KVDataSet origin, FlatMapOp flatMapOp, ReduceOp reduceOp) throws Exception {
+    public static void configureJob(Job job, KVDS origin, FlatMapOp flatMapOp, ReduceOp reduceOp) throws Exception {
         origin.getContext().opSerializer().saveFlatMapOpToConf(job.getConfiguration(), flatMapOp);
         job.setMapperClass(FlatMapOpMapper.class);
         origin.getContext().opSerializer().saveReduceOpToConf(job.getConfiguration(), reduceOp);
@@ -127,8 +124,7 @@ public class KVOpJobUtils {
     }
 
 
-
-    public static void configureJob(Job job, KVDataSet origin, CompositeMapOp compositeMapOp, ReduceOp reduceOp) throws Exception {
+    public static void configureJob(Job job, KVDS origin, CompositeMapOp compositeMapOp, ReduceOp reduceOp) throws Exception {
         origin.getContext().opSerializer().saveCompositeMapOp(job.getConfiguration(), compositeMapOp);
         job.setMapperClass(CompositeGeneralMapOpMapper.class);
         origin.getContext().opSerializer().saveReduceOpToConf(job.getConfiguration(), reduceOp);
@@ -136,19 +132,19 @@ public class KVOpJobUtils {
         setKeyValueClassesBasedOnMapReduce(job, origin, compositeMapOp, reduceOp);
     }
 
-    public static void configureJob(Job job, KVDataSet origin, CompositeMapOp compositeMapOp) throws Exception {
+    public static void configureJob(Job job, KVDS origin, CompositeMapOp compositeMapOp) throws Exception {
         origin.getContext().opSerializer().saveCompositeMapOp(job.getConfiguration(), compositeMapOp);
         job.setMapperClass(CompositeGeneralMapOpMapper.class);
         setKeyValueClassesBasedOnMap(job, origin, compositeMapOp);
     }
 
-    public static void configureJob(Job job, KVDataSet origin, CompositeReduceOp reduceOp) throws Exception {
+    public static void configureJob(Job job, KVDS origin, CompositeReduceOp reduceOp) throws Exception {
         origin.getContext().opSerializer().saveCompositeReduceOp(job.getConfiguration(), reduceOp);
         job.setReducerClass(CompositeReduceOpReducer.class);
         setKeyValueClassesBasedOnReduce(job, origin, reduceOp);
     }
 
-    public static void configureJob(Job job, KVDataSet origin, CompositeMapOp compositeMapOp, CompositeReduceOp reduceOp) throws Exception {
+    public static void configureJob(Job job, KVDS origin, CompositeMapOp compositeMapOp, CompositeReduceOp reduceOp) throws Exception {
         origin.getContext().opSerializer().saveCompositeMapOp(job.getConfiguration(), compositeMapOp);
         job.setMapperClass(CompositeGeneralMapOpMapper.class);
         origin.getContext().opSerializer().saveCompositeReduceOp(job.getConfiguration(), reduceOp);
@@ -157,7 +153,7 @@ public class KVOpJobUtils {
     }
 
 
-    public static void setKeyValueClassesBasedOnMapReduce(Job job, KVDataSet origin, KVUnoOp mapOp, KVUnoOp reduceOp) throws Exception {
+    public static void setKeyValueClassesBasedOnMapReduce(Job job, KVDS origin, KVUnoOp mapOp, KVUnoOp reduceOp) throws Exception {
         Class<?> mapperInputKeyClass = origin.keyClass();
         Class<?> mapperInputValueClass = origin.valueClass();
         Class<?> mapperOutputKeyClass = ((OpKVTransformer) mapOp).toKeyClass();
@@ -211,7 +207,7 @@ public class KVOpJobUtils {
         );
     }
 
-    public static void setKeyValueClassesBasedOnMap(Job job, KVDataSet origin, KVUnoOp mapOp) throws Exception {
+    public static void setKeyValueClassesBasedOnMap(Job job, KVDS origin, KVUnoOp mapOp) throws Exception {
         Class<?> mapperInputKeyClass = origin.keyClass();
         Class<?> mapperInputValueClass = origin.valueClass();
         Class<?> mapperOutputKeyClass = ((OpKVTransformer) mapOp).toKeyClass();
@@ -235,7 +231,7 @@ public class KVOpJobUtils {
         );
     }
 
-    public static void setKeyValueClassesBasedOnReduce(Job job, KVDataSet origin, KVUnoOp reduceOp) throws Exception {
+    public static void setKeyValueClassesBasedOnReduce(Job job, KVDS origin, KVUnoOp reduceOp) throws Exception {
         Class<?> mapperInputKeyClass = origin.keyClass();
         Class<?> mapperInputValueClass = origin.valueClass();
         Class<?> mapperOutputKeyClass = mapperInputKeyClass;
@@ -258,9 +254,6 @@ public class KVOpJobUtils {
                 reduceOutputValueClass
         );
     }
-
-
-
 
 
 }

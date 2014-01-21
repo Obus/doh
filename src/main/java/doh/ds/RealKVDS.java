@@ -2,16 +2,16 @@ package doh.ds;
 
 import doh.api.Context;
 import doh.api.ds.HDFSLocation;
-import doh.api.ds.KVDataSet;
-import doh.api.ds.KVDataSetFactory;
+import doh.api.ds.KVDS;
+import doh.api.ds.KVDSFactory;
 import doh.api.ds.Location;
 import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
 import doh.api.op.ReduceOp;
 import doh.api.op.ValueOnlyReduceOp;
-import doh.op.*;
-import doh.op.kvop.*;
+import doh.op.Op;
+import doh.op.kvop.KVOp;
 import doh.op.mr.FlatMapOpMapper;
 import doh.op.mr.MapOpMapper;
 import doh.op.mr.ReduceOpReducer;
@@ -36,15 +36,16 @@ import java.util.Iterator;
 import static doh.op.WritableObjectDictionaryFactory.getObjectClass;
 import static doh.op.WritableObjectDictionaryFactory.getWritableClass;
 
-public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
+public class RealKVDS<Key, Value> implements KVDS<Key, Value> {
     protected final Location location;
     protected Context context;
 
 
-    public RealKVDataSet(Path path) {
+    public RealKVDS(Path path) {
         location = new HDFSLocation.SingleHDFSLocation(path);
     }
-    public RealKVDataSet(Path[] path) {
+
+    public RealKVDS(Path[] path) {
         location = new HDFSLocation.MultyHDFSLocation(path);
     }
 
@@ -54,7 +55,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         return context;
     }
 
-    public RealKVDataSet(Location location) {
+    public RealKVDS(Location location) {
         if (!location.isHDFS()) {
             throw new UnsupportedOperationException();
         }
@@ -67,7 +68,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     @Override
-    public RealKVDataSet<Key, Value> beReady() {
+    public RealKVDS<Key, Value> beReady() {
         return this;// always ready
     }
 
@@ -110,12 +111,10 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
     private static Path[] paths(HDFSLocation hdfsLocation) {
         if (hdfsLocation.isSingle()) {
-            return new Path[] {((HDFSLocation.SingleHDFSLocation)hdfsLocation).getPath()};
-        }
-        else if (!hdfsLocation.isSingle()) {
-            return ((HDFSLocation.MultyHDFSLocation)hdfsLocation).getPaths();
-        }
-        else {
+            return new Path[]{((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath()};
+        } else if (!hdfsLocation.isSingle()) {
+            return ((HDFSLocation.MultyHDFSLocation) hdfsLocation).getPaths();
+        } else {
             throw new IllegalStateException();
         }
     }
@@ -125,17 +124,17 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     @Override
-    public RealKVDataSet<Key, Value> comeTogetherRightNow(KVDataSet<Key, Value> other) {
-        RealKVDataSet<Key, Value> a = this;
-        RealKVDataSet<Key, Value> b = other instanceof RealKVDataSet ?
-                (RealKVDataSet<Key, Value>) other :
-                ((LazyKVDataSet<Key, Value>) other).real();
-        return KVDataSetFactory.createReal(a, b);
+    public RealKVDS<Key, Value> comeTogetherRightNow(KVDS<Key, Value> other) {
+        RealKVDS<Key, Value> a = this;
+        RealKVDS<Key, Value> b = other instanceof RealKVDS ?
+                (RealKVDS<Key, Value>) other :
+                ((LazyKVDS<Key, Value>) other).real();
+        return KVDSFactory.createReal(a, b);
     }
 
     @Override
-    public MapKVDataSet<Key, Value> toMapKVDS() {
-        MapKVDataSet<Key, Value> mapKVDS = new MapKVDataSet<Key, Value>(getLocation());
+    public MapKVDS<Key, Value> toMapKVDS() {
+        MapKVDS<Key, Value> mapKVDS = new MapKVDS<Key, Value>(getLocation());
         mapKVDS.setContext(context);
         return mapKVDS;
     }
@@ -150,14 +149,14 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     @Override
-    public <TORIGIN> DataSet<TORIGIN> apply(Op<KV<Key, Value>, TORIGIN> op) throws Exception {
+    public <TORIGIN> DS<TORIGIN> apply(Op<KV<Key, Value>, TORIGIN> op) throws Exception {
         if (op instanceof KVOp) {
             return applyMR((KVOp) op);
         }
         throw new IllegalArgumentException("Unsupported operation type " + op.getClass());
     }
 
-    protected <KEY, VALUE, ToKey, ToValue> RealKVDataSet<ToKey, ToValue> applyMR(
+    protected <KEY, VALUE, ToKey, ToValue> RealKVDS<ToKey, ToValue> applyMR(
             KVOp<KEY, VALUE, ToKey, ToValue> KVOp) throws Exception {
         if (KVOp instanceof MapOp) {
             return map((MapOp) KVOp);
@@ -171,7 +170,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
 
     @Override
-    public <ToKey, ToValue> RealKVDataSet<ToKey, ToValue> map(
+    public <ToKey, ToValue> RealKVDS<ToKey, ToValue> map(
             MapOp<Key, Value, ToKey, ToValue> mapOp
     ) throws Exception {
 
@@ -196,7 +195,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
 
     @Override
-    public <ToKey, ToValue> RealKVDataSet<ToKey, ToValue> flatMap(
+    public <ToKey, ToValue> RealKVDS<ToKey, ToValue> flatMap(
             FlatMapOp<Key, Value, ToKey, ToValue> flatMapOp
     ) throws Exception {
 
@@ -220,7 +219,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
 
     @Override
-    public <ToKey, ToValue> RealKVDataSet<ToKey, ToValue> reduce(
+    public <ToKey, ToValue> RealKVDS<ToKey, ToValue> reduce(
             ReduceOp<Key, Value, ToKey, ToValue> reduceOp
     ) throws Exception {
 
@@ -297,8 +296,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         if (hdfsLocation.isSingle()) {
             Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
             return keyClassOfDir(context.getConf(), path);
-        }
-        else if (!hdfsLocation.isSingle()) {
+        } else if (!hdfsLocation.isSingle()) {
             Path path = ((HDFSLocation.MultyHDFSLocation) hdfsLocation).getPaths()[0];
             return keyClassOfDir(context.getConf(), path);
         }
@@ -348,8 +346,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         if (hdfsLocation.isSingle()) {
             Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
             return valueClassOfDir(context.getConf(), path);
-        }
-        else if (!hdfsLocation.isSingle()) {
+        } else if (!hdfsLocation.isSingle()) {
             Path path = ((HDFSLocation.MultyHDFSLocation) hdfsLocation).getPaths()[0];
             return valueClassOfDir(context.getConf(), path);
         }

@@ -2,16 +2,15 @@ package doh.ds;
 
 import doh.api.ds.Location;
 import doh.api.op.KV;
-import org.apache.hadoop.fs.Path;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MapKVDataSet<KEY, VALUE> extends RealKVDataSet<KEY, VALUE> {
+public class MapKVDS<KEY, VALUE> extends RealKVDS<KEY, VALUE> {
 
     private Map<KEY, VALUE> inMemoryMap;
 
-    public MapKVDataSet(Location location) {
+    public MapKVDS(Location location) {
         super(location);
     }
 

@@ -1,11 +1,11 @@
 package doh.op;
 
 import com.synqera.bigkore.model.fact.Consumer;
-import doh.ds.LazyKVDataSet;
-import doh.ds.MapKVDataSet;
 import doh.api.ds.RawUserStories;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
+import doh.ds.LazyKVDS;
+import doh.ds.MapKVDS;
 import org.apache.hadoop.io.BytesWritable;
 import org.junit.Test;
 
@@ -29,20 +29,20 @@ public class LazyExample {
     @Test
     public void testLazy() throws Exception {
         RawUserStories rawUS = Example.make();
-        LazyKVDataSet<BytesWritable, String> lazyRawUS = new LazyKVDataSet<BytesWritable, String>(rawUS.getContext(), rawUS);
-        LazyKVDataSet<BytesWritable, String> lazyRawUS1 = lazyRawUS.map(new IdentityMapOp<BytesWritable, String>());
-        LazyKVDataSet<BytesWritable, String> lazyRawUS2 = lazyRawUS1.map(new IdentityMapOp<BytesWritable, String>());
+        LazyKVDS<BytesWritable, String> lazyRawUS = new LazyKVDS<BytesWritable, String>(rawUS.getContext(), rawUS);
+        LazyKVDS<BytesWritable, String> lazyRawUS1 = lazyRawUS.map(new IdentityMapOp<BytesWritable, String>());
+        LazyKVDS<BytesWritable, String> lazyRawUS2 = lazyRawUS1.map(new IdentityMapOp<BytesWritable, String>());
 
-        LazyKVDataSet<Consumer, Long> lazyConsumerPayments
+        LazyKVDS<Consumer, Long> lazyConsumerPayments
                 = lazyRawUS2.flatMap(rawUserStoryToConsumerPayments());
 
-        MapKVDataSet<Consumer, Double> consumerPaymentsAvg
+        MapKVDS<Consumer, Double> consumerPaymentsAvg
                 = lazyConsumerPayments.reduce(valuesAvg()).toMapKVDS();
 
-        LazyKVDataSet<Consumer, Double> lazyConsumerPaymentsStd
+        LazyKVDS<Consumer, Double> lazyConsumerPaymentsStd
                 = lazyConsumerPayments.reduce(valuesStd(consumerPaymentsAvg));
 
-        LazyKVDataSet<Consumer, Double> lazyConsumerPaymentsStd1
+        LazyKVDS<Consumer, Double> lazyConsumerPaymentsStd1
                 = lazyConsumerPaymentsStd.map(new IdentityMapOp<Consumer, Double>());
 
 
@@ -50,15 +50,15 @@ public class LazyExample {
 
         KV<Consumer, Double> kv;
 
-        kv= cpIt.next();
+        kv = cpIt.next();
         assertEquals(new Consumer("Elton"), kv.key);
         assertEquals(74100.0, kv.value, 0.1);
 
-        kv= cpIt.next();
+        kv = cpIt.next();
         assertEquals(new Consumer("Emma"), kv.key);
         assertEquals(55.57777333511022, kv.value, 0.1);
 
-        kv= cpIt.next();
+        kv = cpIt.next();
         assertEquals(new Consumer("Johny"), kv.key);
         assertEquals(574.1785088280474, kv.value, 0.1);
 

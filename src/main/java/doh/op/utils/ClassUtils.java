@@ -1,6 +1,5 @@
 package doh.op.utils;
 
-import doh.ds.RealKVDataSet;
 import org.apache.hadoop.io.Writable;
 
 public class ClassUtils {

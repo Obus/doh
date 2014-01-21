@@ -1,14 +1,19 @@
 package doh.op.serde;
 
-import com.google.gson.*;
-import doh.ds.MapKVDataSet;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import doh.op.OpSequence;
 import doh.op.kvop.KVUnoOp;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class OpSequenceJsonSerDe implements JsonSerializer<OpSequence>, JsonDeserializer<OpSequence> {
@@ -18,7 +23,7 @@ public class OpSequenceJsonSerDe implements JsonSerializer<OpSequence>, JsonDese
         List<KVUnoOp> sequence = new ArrayList<KVUnoOp>();
 
         try {
-            for(JsonElement e : items){
+            for (JsonElement e : items) {
                 JsonArray itemArr = (JsonArray) e;
                 if (itemArr.size() != 2) {
                     throw new IllegalArgumentException();
@@ -36,7 +41,7 @@ public class OpSequenceJsonSerDe implements JsonSerializer<OpSequence>, JsonDese
     @Override
     public JsonElement serialize(OpSequence src, Type typeOfSrc, JsonSerializationContext context) {
         JsonArray result = new JsonArray();
-        for(KVUnoOp item : src.getSequence()){
+        for (KVUnoOp item : src.getSequence()) {
             JsonArray itemArr = new JsonArray();
             itemArr.add(context.serialize(item.getClass().getName()));
             itemArr.add(context.serialize(item));

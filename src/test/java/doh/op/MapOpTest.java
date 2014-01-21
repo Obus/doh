@@ -4,9 +4,9 @@ import doh.api.Context;
 import doh.api.OpParameter;
 import doh.api.TempPathManager;
 import doh.api.ds.HDFSLocation;
-import doh.ds.RealKVDataSet;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
+import doh.ds.RealKVDS;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -118,12 +118,12 @@ public class MapOpTest {
 
         writer.close();
 
-        RealKVDataSet<Long, String> csv = new RealKVDataSet<Long, String>(input);
+        RealKVDS<Long, String> csv = new RealKVDS<Long, String>(input);
         csv.setContext(context);
-        RealKVDataSet<String, Integer> res = csv.map(new SimpleParametrizedMapOp(3));
+        RealKVDS<String, Integer> res = csv.map(new SimpleParametrizedMapOp(3));
 
         // Path resData = ;
-        Path path = ((HDFSLocation.SingleHDFSLocation)res.getLocation()).getPath();
+        Path path = ((HDFSLocation.SingleHDFSLocation) res.getLocation()).getPath();
         FileSystem fs = path.getFileSystem(conf);
         FileStatus[] statuses = fs.listStatus(path, new Utils.OutputFileUtils.OutputFilesFilter());
         assertEquals(1, statuses.length);

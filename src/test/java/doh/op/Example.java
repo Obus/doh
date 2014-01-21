@@ -6,10 +6,10 @@ import com.synqera.bigkore.model.fact.Payment;
 import com.synqera.bigkore.model.fact.Product;
 import com.synqera.bigkore.model.fact.Time;
 import doh.api.Context;
-import doh.ds.MapKVDataSet;
 import doh.api.ds.RawUserStories;
-import doh.ds.RealKVDataSet;
 import doh.api.op.KV;
+import doh.ds.MapKVDS;
+import doh.ds.RealKVDS;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
@@ -21,9 +21,10 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import static doh.api.op.impl.OpFactory.rawUserStoryToConsumerPayments;
+import static doh.api.op.impl.OpFactory.valuesAvg;
+import static doh.api.op.impl.OpFactory.valuesStd;
 import static org.junit.Assert.assertEquals;
-
-import static doh.api.op.impl.OpFactory.*;
 
 
 public class Example {
@@ -33,28 +34,28 @@ public class Example {
     public void testExample() throws Exception {
         RawUserStories rawUS = make();
 
-        RealKVDataSet<Consumer, Long> consumerPayments
+        RealKVDS<Consumer, Long> consumerPayments
                 = rawUS.flatMap(rawUserStoryToConsumerPayments());
 
-        MapKVDataSet<Consumer, Double> consumerPaymentsAvg
+        MapKVDS<Consumer, Double> consumerPaymentsAvg
                 = consumerPayments.reduce(valuesAvg()).toMapKVDS();
 
-        RealKVDataSet<Consumer, Double> consumerPaymentsStd
+        RealKVDS<Consumer, Double> consumerPaymentsStd
                 = consumerPayments.reduce(valuesStd(consumerPaymentsAvg));
 
         Iterator<KV<Consumer, Double>> cpIt = consumerPaymentsStd.iterator();
 
         KV<Consumer, Double> kv;
 
-        kv= cpIt.next();
+        kv = cpIt.next();
         assertEquals(new Consumer("Elton"), kv.key);
         assertEquals(73935.14996265309, kv.value, 0.1);
 
-        kv= cpIt.next();
+        kv = cpIt.next();
         assertEquals(new Consumer("Emma"), kv.key);
         assertEquals(49.911486279062395, kv.value, 0.1);
 
-        kv= cpIt.next();
+        kv = cpIt.next();
         assertEquals(new Consumer("Johny"), kv.key);
         assertEquals(553.7520094174689, kv.value, 0.1);
     }
