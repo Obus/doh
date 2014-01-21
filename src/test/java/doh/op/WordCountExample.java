@@ -5,6 +5,7 @@ import doh.ds.RealKVDataSet;
 import doh.api.op.FlatMapOp;
 import doh.api.op.KV;
 import doh.api.op.ReduceOp;
+import doh.op.utils.HDFSUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -37,7 +38,7 @@ public class WordCountExample {
         Configuration conf = new Configuration();
         Path input = new Path(args[0]);
         Path tempDir = new Path(args[1]);
-        RealKVDataSet<Long, String> lines = RealKVDataSet.create(Context.create(conf, tempDir), input);
+        RealKVDataSet<Long, String> lines = HDFSUtils.create(Context.create(conf, tempDir), input);
         RealKVDataSet<String, Long> words = lines.flatMap(new LineToWords());
         RealKVDataSet<String, Long> wordsCount = words.reduce(new CountWords());
     }

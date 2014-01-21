@@ -1,6 +1,7 @@
 package doh.op.utils;
 
 
+import doh.api.op.FilterOp;
 import doh.api.op.FlatMapOp;
 import doh.api.op.MapOp;
 import doh.api.op.ReduceOp;
@@ -19,10 +20,6 @@ public class ReflectionUtils {
 
     public static boolean isUnknown(Class clazz) {
         return clazz.equals(UNKNOWN_CLASS);
-    }
-
-    public static Type[] getTypes(Class clazz) {
-        return clazz.getTypeParameters();
     }
 
     public static Class getFromKeyClass(Class clazz) {
@@ -47,10 +44,14 @@ public class ReflectionUtils {
         }
         if (FlatMapOp.class.isAssignableFrom(clazz)) {
             return FlatMapOp.class;
-        } else if (ReduceOp.class.isAssignableFrom(clazz)) {
+        }
+        if (ReduceOp.class.isAssignableFrom(clazz)) {
             return ReduceOp.class;
         }
-        throw new IllegalArgumentException();
+        else if (FilterOp.class.isAssignableFrom(clazz)) {
+            return FilterOp.class;
+        }
+        throw new IllegalArgumentException("Unknown operation class: " + clazz);
     }
 
 
@@ -121,6 +122,9 @@ public class ReflectionUtils {
         }
 
         // Нужный класс найден. Теперь мы можем узнать, какими типами он параметризован.
+        if (genericClasses.empty()) {
+            return UNKNOWN_CLASS;
+        }
         Type result = genericClasses.pop().getActualTypeArguments()[parameterIndex];
 
         while (result instanceof TypeVariable && !genericClasses.empty()) {
@@ -129,6 +133,9 @@ public class ReflectionUtils {
             // Получаем индекс параметра в том классе, в котором он задан.
             int actualArgumentIndex = getParameterTypeDeclarationIndex((TypeVariable) result);
             // Берем соответствующий класс, содержащий метаинформацию о нашем параметре.
+            if (genericClasses.empty()) {
+                return UNKNOWN_CLASS;
+            }
             ParameterizedType type = genericClasses.pop();
             // Получаем информацию о значении параметра.
             result = type.getActualTypeArguments()[actualArgumentIndex];
@@ -162,9 +169,9 @@ public class ReflectionUtils {
         return (Class) result;
     }
 
-    public static final Class UNKNOWN_CLASS = UnknownClass.class;
+    public static final Class UNKNOWN_CLASS = _UnknownClass.class;
 
-    public static final class UnknownClass {
+    public static final class _UnknownClass {
     }
 
     ;

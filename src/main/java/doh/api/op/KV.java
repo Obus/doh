@@ -26,4 +26,13 @@ public class KV<Key, Value> {
     public String toString() {
         return key + "\t" + value;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (! (obj instanceof KV)) {
+            return false;
+        }
+        KV o = (KV) obj;
+        return key.equals(o.key) && value.equals(o.value);
+    }
 }

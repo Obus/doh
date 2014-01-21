@@ -9,9 +9,12 @@ import doh.api.op.MapOp;
 import org.apache.hadoop.io.BytesWritable;
 import org.junit.Test;
 
+import java.util.Iterator;
+
 import static doh.api.op.impl.OpFactory.rawUserStoryToConsumerPayments;
 import static doh.api.op.impl.OpFactory.valuesAvg;
 import static doh.api.op.impl.OpFactory.valuesStd;
+import static org.junit.Assert.assertEquals;
 
 public class LazyExample {
 
@@ -42,9 +45,22 @@ public class LazyExample {
         LazyKVDataSet<Consumer, Double> lazyConsumerPaymentsStd1
                 = lazyConsumerPaymentsStd.map(new IdentityMapOp<Consumer, Double>());
 
-        for (KV<Consumer, Double> kv : lazyConsumerPaymentsStd1) {
-            System.out.println(kv);
-        }
+
+        Iterator<KV<Consumer, Double>> cpIt = lazyConsumerPaymentsStd1.iterator();
+
+        KV<Consumer, Double> kv;
+
+        kv= cpIt.next();
+        assertEquals(new Consumer("Elton"), kv.key);
+        assertEquals(74100.0, kv.value, 0.1);
+
+        kv= cpIt.next();
+        assertEquals(new Consumer("Emma"), kv.key);
+        assertEquals(55.57777333511022, kv.value, 0.1);
+
+        kv= cpIt.next();
+        assertEquals(new Consumer("Johny"), kv.key);
+        assertEquals(574.1785088280474, kv.value, 0.1);
 
     }
 }

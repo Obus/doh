@@ -13,6 +13,7 @@
         <hadoop.version>1.1.2</hadoop.version>
         <mahout.version>0.8</mahout.version>
         <hbase.version>0.94.12</hbase.version>
+        <gson.version>2.0</gson.version>
     </properties>
     <build>
         <plugins>
@@ -94,6 +95,12 @@
             <groupId>com.owlike</groupId>
             <artifactId>genson</artifactId>
             <version>0.98</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
         </dependency>
 
     </dependencies>

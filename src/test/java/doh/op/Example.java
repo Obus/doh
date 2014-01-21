@@ -19,6 +19,9 @@ import org.apache.mahout.common.HadoopUtil;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Iterator;
+
+import static org.junit.Assert.assertEquals;
 
 import static doh.api.op.impl.OpFactory.*;
 
@@ -39,9 +42,21 @@ public class Example {
         RealKVDataSet<Consumer, Double> consumerPaymentsStd
                 = consumerPayments.reduce(valuesStd(consumerPaymentsAvg));
 
-        for (KV<Consumer, Double> kv : consumerPaymentsStd) {
-            System.out.println(kv);
-        }
+        Iterator<KV<Consumer, Double>> cpIt = consumerPaymentsStd.iterator();
+
+        KV<Consumer, Double> kv;
+
+        kv= cpIt.next();
+        assertEquals(new Consumer("Elton"), kv.key);
+        assertEquals(73935.14996265309, kv.value, 0.1);
+
+        kv= cpIt.next();
+        assertEquals(new Consumer("Emma"), kv.key);
+        assertEquals(49.911486279062395, kv.value, 0.1);
+
+        kv= cpIt.next();
+        assertEquals(new Consumer("Johny"), kv.key);
+        assertEquals(553.7520094174689, kv.value, 0.1);
     }
 
     public static RawUserStories make() throws Exception {

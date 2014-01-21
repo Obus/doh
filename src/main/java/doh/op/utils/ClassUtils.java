@@ -24,8 +24,4 @@ public class ClassUtils {
     public static boolean isDouble(Class clazz) {
         return clazz.equals(Double.class);
     }
-
-    public static boolean isKeyValueDataSet(Class clazz) {
-        return RealKVDataSet.class.isAssignableFrom(clazz);
-    }
 }

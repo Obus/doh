@@ -1,6 +1,5 @@
 package doh.ds;
 
-import com.synqera.bigkore.rank.PlatformUtils;
 import doh.api.Context;
 import doh.api.ds.HDFSLocation;
 import doh.api.ds.KVDataSet;
@@ -16,8 +15,11 @@ import doh.op.kvop.*;
 import doh.op.mr.FlatMapOpMapper;
 import doh.op.mr.MapOpMapper;
 import doh.op.mr.ReduceOpReducer;
+import doh.op.utils.HDFSUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
@@ -25,6 +27,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -187,7 +191,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         context.runJob(job);
 
-        return create(context, output);
+        return HDFSUtils.create(context, output);
     }
 
 
@@ -211,7 +215,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         context.runJob(job);
 
-        return create(context, output);
+        return HDFSUtils.create(context, output);
     }
 
 
@@ -236,7 +240,7 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
 
         context.runJob(job);
 
-        return create(context, output);
+        return HDFSUtils.create(context, output);
     }
 
 
@@ -302,17 +306,40 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
     }
 
     public static Class<?> valueClassOfDir(Configuration conf, Path path) throws IOException {
-        Path dataPath = PlatformUtils.listOutputFiles(conf, path)[0];
+        Path dataPath = HDFSUtils.listOutputFiles(conf, path)[0];
         SequenceFile.Reader r
                 = new SequenceFile.Reader(dataPath.getFileSystem(conf), dataPath, conf);
         return r.getValueClass();
     }
 
     public static Class<?> keyClassOfDir(Configuration conf, Path path) throws IOException {
-        Path dataPath = PlatformUtils.listOutputFiles(conf, path)[0];
+        Path dataPath = HDFSUtils.listOutputFiles(conf, path)[0];
         SequenceFile.Reader r
                 = new SequenceFile.Reader(dataPath.getFileSystem(conf), dataPath, conf);
         return r.getKeyClass();
+    }
+
+    public static class OutputFilesFilter implements PathFilter {
+        private static final Logger LOGGER = LoggerFactory.getLogger(OutputFilesFilter.class);
+
+        private final Configuration conf;
+
+        public OutputFilesFilter(Configuration conf) {
+            this.conf = new Configuration(conf);
+        }
+
+        @Override
+        public boolean accept(Path path) {
+            boolean isFile = false;
+            try {
+                FileSystem fs = path.getFileSystem(conf);
+                isFile = fs.exists(path) && fs.isFile(path);
+            } catch (IOException e) {
+                LOGGER.error("Error while filtering file " + path + ". Pass", e);
+            }
+            isFile &= !path.getName().startsWith("_");
+            return isFile;
+        }
     }
 
     @Override
@@ -339,11 +366,5 @@ public class RealKVDataSet<Key, Value> implements KVDataSet<Key, Value> {
         return getObjectClass((Class<? extends Writable>) this.writableValueClass());
     }
 
-
-    public static <KEY, VALUE> RealKVDataSet<KEY, VALUE> create(Context context, Path path) {
-        RealKVDataSet<KEY, VALUE> kvds = new RealKVDataSet<KEY, VALUE>(new HDFSLocation.SingleHDFSLocation(path));
-        kvds.setContext(context);
-        return kvds;
-    }
 
 }
