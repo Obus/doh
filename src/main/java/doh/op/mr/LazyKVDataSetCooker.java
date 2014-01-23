@@ -1,7 +1,7 @@
 package doh.op.mr;
 
 import com.google.common.collect.Lists;
-import doh.api.ds.HDFSLocation;
+import doh2.api.HDFSLocation;
 import doh.api.op.FlatMapOp;
 import doh.api.op.MapOp;
 import doh.api.op.ReduceOp;

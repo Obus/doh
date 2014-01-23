@@ -3,7 +3,7 @@ package doh.op;
 import doh.api.Context;
 import doh.api.OpParameter;
 import doh.api.TempPathManager;
-import doh.api.ds.HDFSLocation;
+import doh2.api.HDFSLocation;
 import doh.api.op.KV;
 import doh.api.op.MapOp;
 import doh.ds.RealKVDS;

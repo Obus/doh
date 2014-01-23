@@ -5,7 +5,7 @@ import com.owlike.genson.Converter;
 import com.owlike.genson.TransformationException;
 import com.owlike.genson.stream.ObjectReader;
 import com.owlike.genson.stream.ObjectWriter;
-import doh.api.ds.HDFSLocation;
+import doh2.api.HDFSLocation;
 import doh.ds.MapKVDS;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;

@@ -25,9 +25,10 @@ import static doh.api.op.impl.OpFactory.rawUserStoryToConsumerPayments;
 import static doh.api.op.impl.OpFactory.valuesAvg;
 import static doh.api.op.impl.OpFactory.valuesStd;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 
-public class Example {
+public class RealExample {
 
 
     @Test
@@ -43,21 +44,33 @@ public class Example {
         RealKVDS<Consumer, Double> consumerPaymentsStd
                 = consumerPayments.reduce(valuesStd(consumerPaymentsAvg));
 
+
         Iterator<KV<Consumer, Double>> cpIt = consumerPaymentsStd.iterator();
-
         KV<Consumer, Double> kv;
-
         kv = cpIt.next();
         assertEquals(new Consumer("Elton"), kv.key);
-        assertEquals(73935.14996265309, kv.value, 0.1);
-
+        assertEquals(74100.0, kv.value, 0.1);
         kv = cpIt.next();
         assertEquals(new Consumer("Emma"), kv.key);
-        assertEquals(49.911486279062395, kv.value, 0.1);
-
+        assertEquals(55.57777333511022, kv.value, 0.1);
         kv = cpIt.next();
         assertEquals(new Consumer("Johny"), kv.key);
-        assertEquals(553.7520094174689, kv.value, 0.1);
+        assertEquals(574.1785088280474, kv.value, 0.1);
+        assertFalse(cpIt.hasNext());
+
+
+        Iterator<KV<Consumer, Double>> cpaIt = consumerPaymentsAvg.iterator();
+        kv = cpaIt.next();
+        assertEquals(new Consumer("Elton"), kv.key);
+        assertEquals(75900.0, kv.value, 0.1);
+        kv = cpaIt.next();
+        assertEquals(new Consumer("Emma"), kv.key);
+        assertEquals(113.33333333333333, kv.value, 0.1);
+        kv = cpaIt.next();
+        assertEquals(new Consumer("Johny"), kv.key);
+        assertEquals(353.2, kv.value, 0.1);
+        assertFalse(cpaIt.hasNext());
+
     }
 
     public static RawUserStories make() throws Exception {

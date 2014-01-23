@@ -41,7 +41,7 @@ public class CompositeReduceOpReducer
         try {
             Configuration conf = context.getConfiguration();
             opSerializer = OpSerializer.create(conf);
-            op = opSerializer.loadCompositeReduceOpConf(context.getConfiguration());
+            op = (CompositeReduceOp) opSerializer.loadReducerOp(context.getConfiguration());
             fromKeyDictionary = createDictionary(op.fromKeyClass());
             fromValueDictionary = createDictionary(op.fromValueClass());
             toKeyDictionary = createDictionary(op.toKeyClass());

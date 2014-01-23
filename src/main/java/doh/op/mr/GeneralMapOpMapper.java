@@ -1,10 +1,11 @@
 package doh.op.mr;
 
+import doh.api.op.KV;
 import doh.op.Op;
-import doh.op.serde.OpSerializer;
 import doh.op.WritableObjectDictionaryFactory;
 import doh.op.kvop.CompositeMapOp;
-import doh.api.op.KV;
+import doh.op.kvop.KVUnoOp;
+import doh.op.serde.OpSerializer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -14,10 +15,7 @@ import java.io.IOException;
 
 import static doh.op.WritableObjectDictionaryFactory.createDictionary;
 
-
-
-
-public class CompositeGeneralMapOpMapper <
+public class GeneralMapOpMapper<
         WRITABLE_FROM_KEY extends WritableComparable,
         WRITABLE_FROM_VALUE extends Writable,
         WRITABLE_TO_KEY extends WritableComparable,
@@ -29,7 +27,7 @@ public class CompositeGeneralMapOpMapper <
         >
         extends Mapper<WRITABLE_FROM_KEY, WRITABLE_FROM_VALUE, WRITABLE_TO_KEY, WRITABLE_TO_VALUE> {
 
-    private CompositeMapOp<FROM_KEY, FROM_VALUE, TO_KEY, TO_VALUE> op;
+    private KVUnoOp<FROM_KEY, FROM_VALUE, TO_KEY, TO_VALUE> op;
     private WritableObjectDictionaryFactory.WritableObjectDictionary<FROM_KEY, WRITABLE_FROM_KEY> fromKeyDictionary;
     private WritableObjectDictionaryFactory.WritableObjectDictionary<FROM_VALUE, WRITABLE_FROM_VALUE> fromValueDictionary;
     private WritableObjectDictionaryFactory.WritableObjectDictionary<TO_KEY, WRITABLE_TO_KEY> toKeyDictionary;
@@ -41,7 +39,7 @@ public class CompositeGeneralMapOpMapper <
         try {
             Configuration conf = context.getConfiguration();
             opSerializer = OpSerializer.create(conf);
-            op = opSerializer.loadCompositeMapOpConf(conf);
+            op = opSerializer.loadMapperOp(conf);
             fromKeyDictionary = createDictionary(opSerializer.loadMapInputKeyClassFromConf(conf));
             fromValueDictionary = createDictionary(opSerializer.loadMapInputValueClassFromConf(conf));
             toKeyDictionary = createDictionary(opSerializer.loadMapOutputKeyClassFromConf(conf));

@@ -39,7 +39,7 @@ public class MapOpMapper
         try {
             Configuration conf = context.getConfiguration();
             opSerializer = OpSerializer.create(conf);
-            op = opSerializer.loadMapOpFromConf(context.getConfiguration());
+            op = (MapOp) opSerializer.loadMapperOp(context.getConfiguration());
             fromKeyDictionary = createDictionary(op.fromKeyClass());
             fromValueDictionary = createDictionary(op.fromValueClass());
             toKeyDictionary = createDictionary(op.toKeyClass());

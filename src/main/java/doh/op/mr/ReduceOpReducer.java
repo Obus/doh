@@ -40,7 +40,7 @@ public class ReduceOpReducer
         try {
             Configuration conf = context.getConfiguration();
             opSerializer = OpSerializer.create(conf);
-            op = opSerializer.loadReduceOpFromConf(context.getConfiguration());
+            op = (ReduceOp) opSerializer.loadReducerOp(context.getConfiguration());
             fromKeyDictionary = createDictionary(op.fromKeyClass());
             fromValueDictionary = createDictionary(op.fromValueClass());
             toKeyDictionary = createDictionary(op.toKeyClass());

@@ -4,6 +4,7 @@ import com.google.common.base.Splitter;
 import doh.api.OpParameter;
 import doh.op.Op;
 import doh.op.StringSerDe;
+import doh.op.kvop.KVUnoOp;
 import doh.op.utils.ReflectionUtils;
 import doh.op.WritableObjectDictionaryFactory;
 import doh.op.kvop.CompositeMapOp;
@@ -26,6 +27,8 @@ public class OpSerializer {
     private static final String COMPOSITE_MAP_PARAM_NAME = "tmp.op.composite.map";
     private static final String REDUCE_PARAM_NAME = "tmp.op.reduce";
     private static final String COMPOSITE_REDUCE_PARAM_NAME = "tmp.op.composite.reduce";
+    private static final String MAPPER_OP = "tmp.op.mapper";
+    private static final String REDUCER_OP = "tmp.op.reducer";
 
     private static final String KEY_VALUE_CLASSES_NAME = "tmp.op.keyValue.classes";
     private static final String SELF_NAME = "tmp.op.serializer";
@@ -118,7 +121,7 @@ public class OpSerializer {
 
 
     private  void saveObjectToConf(Configuration conf, String paramName, Object obj) throws Exception {
-        String value = stringSerDe.serialize(obj); //WritableObjectDictionaryFactory.objectToString(obj);
+        String value = stringSerDe.serialize(obj);
         System.out.println();
         System.out.println();
         System.out.println("Saving parameter: " + paramName);
@@ -128,60 +131,23 @@ public class OpSerializer {
 
 
     private  Object loadObjectFromConf(Configuration conf, String paramName) throws Exception {
-        return stringSerDe.deserialize(conf.get(paramName)); //WritableObjectDictionaryFactory.stringToObject(conf.get(paramName));
+        return stringSerDe.deserialize(conf.get(paramName));
     }
 
 
-    public  <T extends MapOp> T loadMapOpFromConf(Configuration conf) throws Exception {
-        return (T) loadObjectFromConf(conf, MAP_PARAM_NAME); //loadOpFromConf(conf, MAP_PARAM_NAME);
+    public void saveMapperOp(Configuration conf, KVUnoOp op) throws Exception {
+        saveObjectToConf(conf, MAPPER_OP, op);
+    }
+    public void saveReducerOp(Configuration conf, KVUnoOp op) throws Exception {
+        saveObjectToConf(conf, REDUCER_OP, op);
     }
 
-    public  <T extends FlatMapOp> T loadFlatMapOpFromConf(Configuration conf) throws Exception {
-        return (T) loadObjectFromConf(conf, FLAT_MAP_PARAM_NAME); //loadOpFromConf(conf, FLAT_MAP_PARAM_NAME);
+    public KVUnoOp loadMapperOp(Configuration conf) throws Exception {
+        return (KVUnoOp) loadObjectFromConf(conf, MAPPER_OP);
     }
-
-    public  <T extends ReduceOp> T loadReduceOpFromConf(Configuration conf) throws Exception {
-        return (T) loadObjectFromConf(conf, REDUCE_PARAM_NAME); //loadOpFromConf(conf, REDUCE_PARAM_NAME);
+    public KVUnoOp loadReducerOp(Configuration conf) throws Exception {
+        return (KVUnoOp) loadObjectFromConf(conf, REDUCER_OP);
     }
-
-    public  <T extends MapOp> void saveMapOpToConf(Configuration conf, T op) throws Exception {
-        saveObjectToConf(conf, MAP_PARAM_NAME, op);
-//        conf.set(MAP_PARAM_NAME, op.getClass().getName());
-//        saveOpFieldsToConf(conf, op);
-    }
-
-    public  <T extends FlatMapOp> void saveFlatMapOpToConf(Configuration conf, T op) throws Exception {
-        saveObjectToConf(conf, FLAT_MAP_PARAM_NAME, op);
-//        conf.set(FLAT_MAP_PARAM_NAME, op.getClass().getName());
-//        saveOpFieldsToConf(conf, op);
-    }
-
-    public  <T extends ReduceOp> void saveReduceOpToConf(Configuration conf, T op) throws Exception {
-        saveObjectToConf(conf, REDUCE_PARAM_NAME, op);
-//        conf.set(REDUCE_PARAM_NAME, op.getClass().getName());
-//        saveOpFieldsToConf(conf, op);
-    }
-
-    public  <T extends CompositeMapOp> T loadCompositeMapOpConf(Configuration conf) throws Exception {
-        return (T) loadObjectFromConf(conf, COMPOSITE_MAP_PARAM_NAME); //throw new UnsupportedOperationException();
-    }
-
-
-    public  <T extends CompositeReduceOp> T loadCompositeReduceOpConf(Configuration conf) throws Exception {
-        return (T) loadObjectFromConf(conf, COMPOSITE_REDUCE_PARAM_NAME); //throw new UnsupportedOperationException();
-    }
-
-    public  void saveCompositeMapOp(Configuration conf, CompositeMapOp op) throws Exception {
-        saveObjectToConf(conf, COMPOSITE_MAP_PARAM_NAME, op);//throw new UnsupportedOperationException();
-    }
-
-    public  void saveCompositeReduceOp(Configuration conf, CompositeReduceOp op) throws Exception {
-        saveObjectToConf(conf, COMPOSITE_REDUCE_PARAM_NAME, op);//throw new UnsupportedOperationException();
-    }
-
-
-
-
 
 
     public static List<Field> opParametersAccessible(List<Field> fields) {
@@ -207,6 +173,4 @@ public class OpSerializer {
         }
         return false;
     }
-
-
 }

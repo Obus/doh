@@ -1,5 +1,6 @@
-package doh.api.ds;
+package doh2.api;
 
+import doh.api.ds.Location;
 import org.apache.hadoop.fs.Path;
 
 public abstract class HDFSLocation implements Location {
@@ -25,15 +26,21 @@ public abstract class HDFSLocation implements Location {
         public Path getPath() {
             return path;
         }
+
+        @Override
+        public Path[] getPaths() {
+            return new Path[]{path};
+        }
     }
 
-    public static class MultyHDFSLocation extends HDFSLocation {
+    public static class MultiHDFSLocation extends HDFSLocation {
         private final Path[] paths;
 
-        public MultyHDFSLocation(Path[] path) {
+        public MultiHDFSLocation(Path[] path) {
             this.paths = path;
         }
 
+        @Override
         public Path[] getPaths() {
             return paths;
         }
@@ -43,4 +50,6 @@ public abstract class HDFSLocation implements Location {
             return false;
         }
     }
+
+    public abstract Path[] getPaths();
 }

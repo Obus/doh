@@ -1,7 +1,7 @@
 package doh.ds;
 
 import doh.api.Context;
-import doh.api.ds.HDFSLocation;
+import doh2.api.HDFSLocation;
 import doh.api.ds.KVDS;
 import doh.api.ds.KVDSFactory;
 import doh.api.ds.Location;
@@ -46,7 +46,7 @@ public class RealKVDS<Key, Value> implements KVDS<Key, Value> {
     }
 
     public RealKVDS(Path[] path) {
-        location = new HDFSLocation.MultyHDFSLocation(path);
+        location = new HDFSLocation.MultiHDFSLocation(path);
     }
 
 
@@ -113,7 +113,7 @@ public class RealKVDS<Key, Value> implements KVDS<Key, Value> {
         if (hdfsLocation.isSingle()) {
             return new Path[]{((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath()};
         } else if (!hdfsLocation.isSingle()) {
-            return ((HDFSLocation.MultyHDFSLocation) hdfsLocation).getPaths();
+            return ((HDFSLocation.MultiHDFSLocation) hdfsLocation).getPaths();
         } else {
             throw new IllegalStateException();
         }
@@ -244,7 +244,7 @@ public class RealKVDS<Key, Value> implements KVDS<Key, Value> {
 
 
     public void setUpMapOpJob(Job job, MapOp mapOp) throws Exception {
-        context.opSerializer().saveMapOpToConf(job.getConfiguration(), mapOp);
+        context.opSerializer().saveMapperOp(job.getConfiguration(), mapOp);
         job.setMapperClass(MapOpMapper.class);
         job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setMapOutputValueClass(getWritableClass(mapOp.toValueClass()));
@@ -258,7 +258,7 @@ public class RealKVDS<Key, Value> implements KVDS<Key, Value> {
     }
 
     public void setUpFlatMapOpJob(Job job, FlatMapOp mapOp) throws Exception {
-        context.opSerializer().saveFlatMapOpToConf(job.getConfiguration(), mapOp);
+        context.opSerializer().saveMapperOp(job.getConfiguration(), mapOp);
         job.setMapperClass(FlatMapOpMapper.class);
         job.setMapOutputKeyClass(getWritableClass(mapOp.toKeyClass()));
         job.setMapOutputValueClass(getWritableClass(mapOp.toValueClass()));
@@ -271,7 +271,7 @@ public class RealKVDS<Key, Value> implements KVDS<Key, Value> {
     }
 
     public void setUpReduceOpJob(Job job, ReduceOp reduceOp) throws Exception {
-        context.opSerializer().saveReduceOpToConf(job.getConfiguration(), reduceOp);
+        context.opSerializer().saveReducerOp(job.getConfiguration(), reduceOp);
         job.setReducerClass(ReduceOpReducer.class);
         if (reduceOp instanceof ValueOnlyReduceOp) {
             job.setOutputKeyClass(this.writableKeyClass());
@@ -297,7 +297,7 @@ public class RealKVDS<Key, Value> implements KVDS<Key, Value> {
             Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
             return keyClassOfDir(context.getConf(), path);
         } else if (!hdfsLocation.isSingle()) {
-            Path path = ((HDFSLocation.MultyHDFSLocation) hdfsLocation).getPaths()[0];
+            Path path = ((HDFSLocation.MultiHDFSLocation) hdfsLocation).getPaths()[0];
             return keyClassOfDir(context.getConf(), path);
         }
         throw new UnsupportedOperationException();
@@ -347,7 +347,7 @@ public class RealKVDS<Key, Value> implements KVDS<Key, Value> {
             Path path = ((HDFSLocation.SingleHDFSLocation) hdfsLocation).getPath();
             return valueClassOfDir(context.getConf(), path);
         } else if (!hdfsLocation.isSingle()) {
-            Path path = ((HDFSLocation.MultyHDFSLocation) hdfsLocation).getPaths()[0];
+            Path path = ((HDFSLocation.MultiHDFSLocation) hdfsLocation).getPaths()[0];
             return valueClassOfDir(context.getConf(), path);
         }
         throw new UnsupportedOperationException();

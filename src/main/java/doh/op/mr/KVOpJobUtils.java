@@ -1,9 +1,7 @@
 package doh.op.mr;
 
-import doh.api.ds.HDFSLocation;
+import doh2.api.HDFSLocation;
 import doh.api.ds.KVDS;
-import doh.api.op.FlatMapOp;
-import doh.api.op.MapOp;
 import doh.api.op.ReduceOp;
 import doh.ds.RealKVDS;
 import doh.op.kvop.CompositeMapOp;
@@ -33,7 +31,7 @@ public class KVOpJobUtils {
         if (hdfsLocation(origin).isSingle()) {
             return new Path[]{((HDFSLocation.SingleHDFSLocation) hdfsLocation(origin)).getPath()};
         } else if (!hdfsLocation(origin).isSingle()) {
-            return ((HDFSLocation.MultyHDFSLocation) hdfsLocation(origin)).getPaths();
+            return hdfsLocation(origin).getPaths();
         } else {
             throw new IllegalStateException();
         }
@@ -79,75 +77,39 @@ public class KVOpJobUtils {
         return job;
     }
 
-    public static Job createMapOnlyJob(RealKVDS origin, MapOp compositeMapOp) throws Exception {
-        Job job = new Job(origin.getContext().getConf(), "Map only job");
-        configureJob(job, origin, compositeMapOp);
-        FileInputFormat.setInputPaths(job, paths(origin));
-        FileOutputFormat.setOutputPath(job, origin.getContext().nextTempPath());
-        return job;
-    }
 
-
-    public static void configureJob(Job job, KVDS origin, FlatMapOp flatMapOp) throws Exception {
-        origin.getContext().opSerializer().saveFlatMapOpToConf(job.getConfiguration(), flatMapOp);
-        job.setMapperClass(MapOpMapper.class);
-        setKeyValueClassesBasedOnMap(job, origin, flatMapOp);
-    }
-
-    public static void configureJob(Job job, KVDS origin, MapOp mapOp) throws Exception {
-        origin.getContext().opSerializer().saveMapOpToConf(job.getConfiguration(), mapOp);
-        job.setMapperClass(MapOpMapper.class);
-        setKeyValueClassesBasedOnMap(job, origin, mapOp);
-    }
 
     public static void configureJob(Job job, KVDS origin, ReduceOp reduceOp) throws Exception {
-        origin.getContext().opSerializer().saveReduceOpToConf(job.getConfiguration(), reduceOp);
+        origin.getContext().opSerializer().saveReducerOp(job.getConfiguration(), reduceOp);
         job.setReducerClass(ReduceOpReducer.class);
         setKeyValueClassesBasedOnReduce(job, origin, reduceOp);
     }
 
-    public static void configureJob(Job job, KVDS origin, MapOp mapOp, ReduceOp reduceOp) throws Exception {
-        origin.getContext().opSerializer().saveMapOpToConf(job.getConfiguration(), mapOp);
-        job.setMapperClass(FlatMapOpMapper.class);
-        origin.getContext().opSerializer().saveReduceOpToConf(job.getConfiguration(), reduceOp);
-        job.setReducerClass(ReduceOpReducer.class);
-        setKeyValueClassesBasedOnMapReduce(job, origin, mapOp, reduceOp);
-
-    }
-
-    public static void configureJob(Job job, KVDS origin, FlatMapOp flatMapOp, ReduceOp reduceOp) throws Exception {
-        origin.getContext().opSerializer().saveFlatMapOpToConf(job.getConfiguration(), flatMapOp);
-        job.setMapperClass(FlatMapOpMapper.class);
-        origin.getContext().opSerializer().saveReduceOpToConf(job.getConfiguration(), reduceOp);
-        job.setReducerClass(ReduceOpReducer.class);
-        setKeyValueClassesBasedOnMapReduce(job, origin, flatMapOp, reduceOp);
-    }
-
 
     public static void configureJob(Job job, KVDS origin, CompositeMapOp compositeMapOp, ReduceOp reduceOp) throws Exception {
-        origin.getContext().opSerializer().saveCompositeMapOp(job.getConfiguration(), compositeMapOp);
-        job.setMapperClass(CompositeGeneralMapOpMapper.class);
-        origin.getContext().opSerializer().saveReduceOpToConf(job.getConfiguration(), reduceOp);
+        origin.getContext().opSerializer().saveMapperOp(job.getConfiguration(), compositeMapOp);
+        job.setMapperClass(CompositeMapOpMapper.class);
+        origin.getContext().opSerializer().saveReducerOp(job.getConfiguration(), reduceOp);
         job.setReducerClass(ReduceOpReducer.class);
         setKeyValueClassesBasedOnMapReduce(job, origin, compositeMapOp, reduceOp);
     }
 
     public static void configureJob(Job job, KVDS origin, CompositeMapOp compositeMapOp) throws Exception {
-        origin.getContext().opSerializer().saveCompositeMapOp(job.getConfiguration(), compositeMapOp);
-        job.setMapperClass(CompositeGeneralMapOpMapper.class);
+        origin.getContext().opSerializer().saveMapperOp(job.getConfiguration(), compositeMapOp);
+        job.setMapperClass(CompositeMapOpMapper.class);
         setKeyValueClassesBasedOnMap(job, origin, compositeMapOp);
     }
 
     public static void configureJob(Job job, KVDS origin, CompositeReduceOp reduceOp) throws Exception {
-        origin.getContext().opSerializer().saveCompositeReduceOp(job.getConfiguration(), reduceOp);
+        origin.getContext().opSerializer().saveReducerOp(job.getConfiguration(), reduceOp);
         job.setReducerClass(CompositeReduceOpReducer.class);
         setKeyValueClassesBasedOnReduce(job, origin, reduceOp);
     }
 
     public static void configureJob(Job job, KVDS origin, CompositeMapOp compositeMapOp, CompositeReduceOp reduceOp) throws Exception {
-        origin.getContext().opSerializer().saveCompositeMapOp(job.getConfiguration(), compositeMapOp);
-        job.setMapperClass(CompositeGeneralMapOpMapper.class);
-        origin.getContext().opSerializer().saveCompositeReduceOp(job.getConfiguration(), reduceOp);
+        origin.getContext().opSerializer().saveMapperOp(job.getConfiguration(), compositeMapOp);
+        job.setMapperClass(CompositeMapOpMapper.class);
+        origin.getContext().opSerializer().saveReducerOp(job.getConfiguration(), reduceOp);
         job.setReducerClass(CompositeReduceOpReducer.class);
         setKeyValueClassesBasedOnMapReduce(job, origin, compositeMapOp, reduceOp);
     }

@@ -1,7 +1,7 @@
 package doh.op.utils;
 
 import doh.api.Context;
-import doh.api.ds.HDFSLocation;
+import doh2.api.HDFSLocation;
 import doh.ds.RealKVDS;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;

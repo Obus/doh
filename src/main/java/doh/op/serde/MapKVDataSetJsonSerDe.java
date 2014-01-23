@@ -8,7 +8,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import doh.api.Context;
-import doh.api.ds.HDFSLocation;
+import doh2.api.HDFSLocation;
 import doh.ds.MapKVDS;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
