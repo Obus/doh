@@ -47,6 +47,8 @@ public class OpExecutor {
                 executionUnit.input.getLocation().getPaths(),
                 mapTaskOp, reduceTaskOp);
 
+        job.setInputFormatClass(executionUnit.input.details().inputFormatClass());
+
         specifyDatSetDetails(job, executionUnit.output.details());
 
         jobRunner.runJob(job);

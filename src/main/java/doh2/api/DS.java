@@ -13,7 +13,7 @@ public interface DS<KEY, VALUE> extends Iterable<KV<KEY, VALUE>> {
 
     Iterator<KV<KEY, VALUE>> iteratorChecked() throws IOException;
 
-    MapDS<KEY, VALUE> toMapDS();
+    MapDS<KEY, VALUE> toMapDS() throws Exception ;
 
     KVDS<KEY, VALUE> comeTogetherRightNow(KVDS<KEY, VALUE> other);
 
@@ -38,12 +38,13 @@ public interface DS<KEY, VALUE> extends Iterable<KV<KEY, VALUE>> {
 
     HDFSLocation getLocation();
 
-    void setOutputPath(Path path);
+    DS<KEY, VALUE> setOutputPath(Path path);
 
-    void setOutputFormatCLass(Class<? extends OutputFormat> outputFormatCLass);
+    DS<KEY, VALUE> setOutputFormatCLass(Class<? extends OutputFormat> outputFormatCLass);
 
-    void setNumReduceTasks(int numReduceTasks);
+    DS<KEY, VALUE> setNumReduceTasks(int numReduceTasks);
 
+    DS<KEY, VALUE> breakJobHere();
 
     boolean isReady();
 }
