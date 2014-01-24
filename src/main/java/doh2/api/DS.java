@@ -2,11 +2,9 @@ package doh2.api;
 
 
 import doh.api.ds.KVDS;
-import doh.api.op.FilterOp;
-import doh.api.op.FlatMapOp;
-import doh.api.op.KV;
-import doh.api.op.MapOp;
-import doh.api.op.ReduceOp;
+import doh.api.op.*;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.OutputFormat;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -40,4 +38,12 @@ public interface DS<KEY, VALUE> extends Iterable<KV<KEY, VALUE>> {
 
     HDFSLocation getLocation();
 
+    void setOutputPath(Path path);
+
+    void setOutputFormatCLass(Class<? extends OutputFormat> outputFormatCLass);
+
+    void setNumReduceTasks(int numReduceTasks);
+
+
+    boolean isReady();
 }

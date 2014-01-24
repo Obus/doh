@@ -12,8 +12,14 @@ import java.util.NoSuchElementException;
  */
 
 public class ExecutionGraph {
-    private final List<OnDemandDS.ExecutionNode> rootNodes = null;
-    private final OpExecutor opExecutor = null;
+    private final List<OnDemandDS.ExecutionNode> rootNodes;
+    private final OpExecutor opExecutor;
+
+
+    public ExecutionGraph(List<OnDemandDS.ExecutionNode> rootNodes, OpExecutor opExecutor) {
+        this.rootNodes = rootNodes;
+        this.opExecutor = opExecutor;
+    }
 
     public Iterable<ExecutionUnit> executionUnits() {
         if (rootNodes.size() == 0) {

@@ -54,24 +54,20 @@ public class OpExecutor {
         executionUnit.output.setReady();
     }
 
-    private void specifyDatSetDetails(Job job, DSDetails details) {
-        if (details == null) {
-            job.setOutputFormatClass(defaultOutputFormatClass);
-            FileOutputFormat.setOutputPath(job, tempPathManager.getNextPath());
+    private DSDetails specifyDatSetDetails(Job job, DSDetails details) {
+        if (details.formatClass == null) {
+            details.formatClass = defaultOutputFormatClass;
         }
-        else {
-            job.setOutputFormatClass(details.formatClass == null ?
-                    defaultOutputFormatClass :
-                    details.formatClass);
-
-            FileOutputFormat.setOutputPath(job, singleLocationPath(details.location) == null ?
-                    tempPathManager.getNextPath() :
-                    singleLocationPath(details.location));
-
-            if (details.numReducers != null) {
-                job.setNumReduceTasks(details.numReducers);
-            }
+        if (singleLocationPath(details.location) == null) {
+            details.location = new HDFSLocation.SingleHDFSLocation(tempPathManager.getNextPath());
         }
+
+        job.setOutputFormatClass(details.formatClass);
+        FileOutputFormat.setOutputPath(job, singleLocationPath(details.location));
+        if (details.numReducers != null) {
+            job.setNumReduceTasks(details.numReducers);
+        }
+        return details;
     }
 
 
@@ -129,4 +125,5 @@ public class OpExecutor {
     public static boolean isGroupingRequired(KVUnoOp kvUnoOp) {
         return kvUnoOp instanceof GroupByKeyOp;
     }
+
 }

@@ -2,17 +2,13 @@ package doh2.impl;
 
 import com.google.common.collect.Lists;
 import doh.api.ds.KVDS;
-import doh.api.op.FilterOp;
-import doh.api.op.FlatMapOp;
-import doh.api.op.GroupByKeyOp;
-import doh.api.op.KV;
-import doh.api.op.MapOp;
-import doh.api.op.ReduceOp;
+import doh.api.op.*;
 import doh.op.kvop.KVUnoOp;
 import doh2.api.DS;
 import doh2.api.HDFSLocation;
 import doh2.api.MapDS;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.OutputFormat;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -21,8 +17,7 @@ import java.util.List;
 public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE> {
 
     private final ExecutionNode node;
-
-    private DSDetails details;
+    private final DSDetails details = new DSDetails();
     private volatile boolean isReady;
 
     private OnDemandDS(OnDemandDS parentDS, KVUnoOp parentOp) {
@@ -32,7 +27,9 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE> {
         this.node.dataSet = this;
     }
 
-
+    public OnDemandDS parent() {
+        return node.incomeNodes().get(0).dataSet;
+    }
 
     @Override
     public Iterator<KV<KEY, VALUE>> iteratorChecked() throws IOException {
@@ -89,8 +86,12 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE> {
         return details.location;
     }
 
-    public DSDetails details() {
+    DSDetails details() {
         return details;
+    }
+
+    ExecutionNode node() {
+        return node;
     }
 
     public OnDemandDS<KEY, VALUE> breakJobHere() {
@@ -102,35 +103,53 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE> {
         return isReady;
     }
 
-    void setReady(DSDetails dsDetails) {
-        synchronized (this) {
+    void setReady() {
+        this.isReady = true;
+    }
 
-        }
+    @Override
+    public void setOutputPath(Path path) {
+        this.details.location = new HDFSLocation.SingleHDFSLocation(path);
+    }
+
+    @Override
+    public void setOutputFormatCLass(Class<? extends OutputFormat> outputFormatCLass) {
+        this.details.formatClass = outputFormatCLass;
+    }
+
+    @Override
+    public void setNumReduceTasks(int numReduceTasks) {
+        this.details.numReducers = numReduceTasks;
     }
 
     Class<KEY> getKeyClass() {
-
+        if (!isReady) {
+            throw new IllegalArgumentException("The data set is not ready yet");
+        }
     }
 
     Class<VALUE> getValueClass() {
+        if (!isReady) {
+            throw new IllegalArgumentException("The data set is not ready yet");
+        }
 
     }
 
     /**
      * Node of execution graph
      * Consist of
-     *      - associated data set
-     *      - operation which produce the associated data set
-     *      - lists of income and outcome nodes
+     * - associated data set
+     * - operation which produce the associated data set
+     * - lists of income and outcome nodes
      *
      * @warning: No more than one income node is supported at the moment
      */
     public static class ExecutionNode {
-        private boolean sequenceBreak = false;
-        private OnDemandDS dataSet;
         private final KVUnoOp dsParentOp;
         private final List<ExecutionNode> incomeNodes;
         private final List<ExecutionNode> outcomeNodes;
+        private boolean sequenceBreak = false;
+        private OnDemandDS dataSet;
 
         public ExecutionNode(KVUnoOp dsParentOp, List<ExecutionNode> incomeNodes, List<ExecutionNode> outcomeNodes) {
             if (incomeNodes.size() > 1) {
@@ -140,8 +159,6 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE> {
             this.incomeNodes = incomeNodes;
             this.outcomeNodes = outcomeNodes;
         }
-
-
 
         public boolean isSequenceBreak() {
             return sequenceBreak;
