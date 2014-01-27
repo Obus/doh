@@ -1,6 +1,6 @@
 package doh2.api;
 
-import doh2.impl.OnDemandDS;
+import doh2.impl.ondemand.OnDemandDS;
 import org.apache.hadoop.fs.Path;
 
 public class DSFactory {

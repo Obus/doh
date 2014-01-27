@@ -1,12 +1,14 @@
 package doh2.api;
 
 
-import doh.api.ds.KVDS;
-import doh.api.op.*;
+import doh2.api.op.FilterOp;
+import doh2.api.op.FlatMapOp;
+import doh2.api.op.KV;
+import doh2.api.op.MapOp;
+import doh2.api.op.ReduceOp;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.OutputFormat;
 
-import java.io.IOException;
 import java.util.Iterator;
 
 public interface DS<KEY, VALUE> extends Iterable<KV<KEY, VALUE>> {
@@ -15,7 +17,7 @@ public interface DS<KEY, VALUE> extends Iterable<KV<KEY, VALUE>> {
 
     MapDS<KEY, VALUE> toMapDS() throws Exception ;
 
-    KVDS<KEY, VALUE> comeTogetherRightNow(KVDS<KEY, VALUE> other);
+    DS<KEY, VALUE> comeTogetherRightNow(DS<KEY, VALUE> other);
 
     @Override
     Iterator<KV<KEY, VALUE>> iterator();
@@ -45,6 +47,8 @@ public interface DS<KEY, VALUE> extends Iterable<KV<KEY, VALUE>> {
     DS<KEY, VALUE> setNumReduceTasks(int numReduceTasks);
 
     DS<KEY, VALUE> breakJobHere();
+
+    DS<KEY, VALUE> execute() throws Exception;
 
     boolean isReady();
 }

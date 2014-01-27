@@ -1,12 +1,10 @@
 package doh2.api;
 
-import doh.api.TempPathManager;
-import doh.op.JobRunner;
-import doh.op.StringSerDe;
-import doh.op.serde.OpSerializer;
-import doh2.impl.DSExecutor;
-import doh2.impl.OnDemandDS;
-import doh2.impl.OpJobMaker;
+import doh2.impl.serde.GsonStringSerDe;
+import doh2.impl.op.JobRunner;
+import doh2.impl.serde.OpSerializer;
+import doh2.impl.ondemand.DSExecutor;
+import doh2.impl.ondemand.OnDemandDS;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.OutputFormat;
@@ -27,7 +25,7 @@ public class DSContext {
         this.conf = conf;
         this.jobRunner = jobRunner;
         this.tempPathManager = new TempPathManager(tempDir);
-        this.opSerializer = OpSerializer.create(conf, new StringSerDe.GsonStringSerDe());
+        this.opSerializer = OpSerializer.create(conf, new GsonStringSerDe());
         this.dsExecutor = new DSExecutor(this);
     }
 

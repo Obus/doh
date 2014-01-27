@@ -1,13 +1,8 @@
 package doh2.api;
 
-import doh.api.ds.Location;
 import org.apache.hadoop.fs.Path;
 
-public abstract class HDFSLocation implements Location {
-    @Override
-    public boolean isHDFS() {
-        return true;
-    }
+public abstract class HDFSLocation {
 
     public abstract boolean isSingle();
 
