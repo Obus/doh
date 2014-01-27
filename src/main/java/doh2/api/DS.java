@@ -11,7 +11,7 @@ import java.util.Iterator;
 
 public interface DS<KEY, VALUE> extends Iterable<KV<KEY, VALUE>> {
 
-    Iterator<KV<KEY, VALUE>> iteratorChecked() throws IOException;
+    Iterator<KV<KEY, VALUE>> iteratorChecked() throws Exception;
 
     MapDS<KEY, VALUE> toMapDS() throws Exception ;
 

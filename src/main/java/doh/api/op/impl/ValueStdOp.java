@@ -4,10 +4,11 @@ import com.synqera.bigkore.model.fact.Consumer;
 import doh.api.OpParameter;
 import doh.api.op.ValueOnlyReduceOp;
 import doh.ds.MapKVDS;
+import doh2.api.MapDS;
 
 public class ValueStdOp<Key> extends ValueOnlyReduceOp<Key, Long, Double> {
     @OpParameter
-    public MapKVDS<Key, Double> keysAvg;
+    public MapDS<Key, Double> keysAvg;
 
     @Override
     public Double reduceValue(Key key, Iterable<Long> values) {

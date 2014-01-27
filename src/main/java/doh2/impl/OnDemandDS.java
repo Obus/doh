@@ -2,51 +2,94 @@ package doh2.impl;
 
 import com.google.common.collect.Lists;
 import doh.api.ds.KVDS;
+import doh.api.ds.Location;
 import doh.api.op.*;
+import doh.ds.KeyValueIterator;
 import doh.op.kvop.KVUnoOp;
+import doh.op.utils.HDFSUtils;
 import doh2.api.DS;
 import doh2.api.DSContext;
 import doh2.api.HDFSLocation;
 import doh2.api.MapDS;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.OutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
-public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE> {
+import static doh.op.WritableObjectDictionaryFactory.getObjectClass;
+
+public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE> {
 
     private final DSContext context;
     private final ExecutionNode node;
     private final DSDetails details = new DSDetails();
     private volatile boolean isReady;
 
+    private Map<KEY, VALUE> inMemoryMap;
+
     private OnDemandDS(OnDemandDS parentDS, KVUnoOp parentOp) {
         this.context = parentDS.context;
         this.node = new ExecutionNode(parentOp,
                 Lists.newArrayList(parentDS.node),
-                Lists.<ExecutionNode>newArrayList());
-        this.node.dataSet = this;
+                Lists.<ExecutionNode>newArrayList(), this);
     }
+
 
     public OnDemandDS(DSContext context, HDFSLocation location) {
         this.context = context;
         this.node = new ExecutionNode(null,
                 Lists.<ExecutionNode>newArrayList(),
-                Lists.<ExecutionNode>newArrayList());
+                Lists.<ExecutionNode>newArrayList(), this);
         this.details.location = location;
+        this.details.formatClass = SequenceFileOutputFormat.class;
+        this.isReady = true;
+    }
+
+
+    protected synchronized Map<KEY, VALUE> inMemoryMap() {
+        if (inMemoryMap == null) {
+            Map<KEY, VALUE> map = new HashMap<KEY, VALUE>();
+            for (KV<KEY, VALUE> kv : this) {
+                map.put(kv.key, kv.value);
+            }
+            inMemoryMap = map;
+        }
+        return inMemoryMap;
     }
 
     @Override
-    public Iterator<KV<KEY, VALUE>> iteratorChecked() throws IOException {
-        return null;
+    public VALUE get(KEY key) {
+        return inMemoryMap().get(key);
+    }
+
+    @Override
+    public Iterator<KV<KEY, VALUE>> iteratorChecked() throws Exception {
+        context.execute(this);
+        if (!getLocation().isSingle()) {
+            throw new UnsupportedOperationException();
+        }
+        Path path = ((HDFSLocation.SingleHDFSLocation) getLocation()).getPath();
+        try {
+            return new KeyValueIterator<KEY, VALUE>(
+                    this.context.conf(),
+                    path, this.getKeyClass(), this.getValueClass());
+        } catch (IOException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
     public MapDS<KEY, VALUE> toMapDS() throws Exception {
         context.execute(this);
-
+        return this;
     }
 
     @Override
@@ -56,7 +99,11 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE> {
 
     @Override
     public Iterator<KV<KEY, VALUE>> iterator() {
-        return null;
+        try {
+            return iteratorChecked();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to iterate over keyValueDatSet", e);
+        }
     }
 
     @Override
@@ -130,18 +177,54 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE> {
         return node.incomeNodes().get(0).dataSet;
     }
 
-    Class<KEY> getKeyClass() {
+    Class<KEY> getKeyClass() throws IOException {
         if (!isReady) {
             throw new IllegalArgumentException("The data set is not ready yet");
         }
-        return null;
+        return getObjectClass((Class<? extends Writable>) this.getWritableKeyClass());
     }
 
-    Class<VALUE> getValueClass() {
+    Class<VALUE> getValueClass() throws IOException {
         if (!isReady) {
             throw new IllegalArgumentException("The data set is not ready yet");
         }
-        return null;
+        return getObjectClass((Class<? extends Writable>) this.getWritableValueClass());
+    }
+
+    Class<?> getWritableValueClass() throws IOException {
+        if (getLocation().isSingle()) {
+            Path path = ((HDFSLocation.SingleHDFSLocation) getLocation()).getPath();
+            return valueClassOfDir(context.conf(), path);
+        } else if (!getLocation().isSingle()) {
+            Path path = ((HDFSLocation.MultiHDFSLocation) getLocation()).getPaths()[0];
+            return valueClassOfDir(context.conf(), path);
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    Class<?> getWritableKeyClass() throws IOException {
+        if (getLocation().isSingle()) {
+            Path path = ((HDFSLocation.SingleHDFSLocation) getLocation()).getPath();
+            return keyClassOfDir(context.conf(), path);
+        } else if (!getLocation().isSingle()) {
+            Path path = ((HDFSLocation.MultiHDFSLocation) getLocation()).getPaths()[0];
+            return keyClassOfDir(context.conf(), path);
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    public static Class<?> keyClassOfDir(Configuration conf, Path path) throws IOException {
+        Path dataPath = HDFSUtils.listOutputFiles(conf, path)[0];
+        SequenceFile.Reader r
+                = new SequenceFile.Reader(dataPath.getFileSystem(conf), dataPath, conf);
+        return r.getKeyClass();
+    }
+
+    public static Class<?> valueClassOfDir(Configuration conf, Path path) throws IOException {
+        Path dataPath = HDFSUtils.listOutputFiles(conf, path)[0];
+        SequenceFile.Reader r
+                = new SequenceFile.Reader(dataPath.getFileSystem(conf), dataPath, conf);
+        return r.getValueClass();
     }
 
     void setReady() {
@@ -168,15 +251,16 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE> {
         private final List<ExecutionNode> incomeNodes;
         private final List<ExecutionNode> outcomeNodes;
         private boolean sequenceBreak = false;
-        private OnDemandDS dataSet;
+        private final OnDemandDS dataSet;
 
-        public ExecutionNode(KVUnoOp dsParentOp, List<ExecutionNode> incomeNodes, List<ExecutionNode> outcomeNodes) {
+        public ExecutionNode(KVUnoOp dsParentOp, List<ExecutionNode> incomeNodes, List<ExecutionNode> outcomeNodes, OnDemandDS dataSet) {
             if (incomeNodes.size() > 1) {
                 throw new UnsupportedOperationException("Only one income node supported.");
             }
             this.dsParentOp = dsParentOp;
             this.incomeNodes = incomeNodes;
             this.outcomeNodes = outcomeNodes;
+            this.dataSet = dataSet;
         }
 
         public boolean isSequenceBreak() {
@@ -200,85 +284,4 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE> {
         }
     }
 
-    public class OnDemandMapDS implements MapDS<KEY, VALUE> {
-        @Override
-        public VALUE get(KEY key) {
-            return null;
-        }
-
-        @Override
-        public boolean contains(KEY key) {
-            return false;
-        }
-
-        @Override
-        public Iterator<KV<KEY, VALUE>> iteratorChecked() throws IOException {
-            return null;
-        }
-
-        @Override
-        public MapDS<KEY, VALUE> toMapDS() throws Exception {
-            return null;
-        }
-
-        @Override
-        public KVDS<KEY, VALUE> comeTogetherRightNow(KVDS<KEY, VALUE> other) {
-            return null;
-        }
-
-        @Override
-        public Iterator<KV<KEY, VALUE>> iterator() {
-            return null;
-        }
-
-        @Override
-        public DS<KEY, VALUE> filter(FilterOp<KEY, VALUE> filterOp) throws Exception {
-            return null;
-        }
-
-        @Override
-        public <TKEY, TVALUE> DS<TKEY, TVALUE> map(MapOp<KEY, VALUE, TKEY, TVALUE> mapOp) throws Exception {
-            return null;
-        }
-
-        @Override
-        public <TKEY, TVALUE> DS<TKEY, TVALUE> flatMap(FlatMapOp<KEY, VALUE, TKEY, TVALUE> flatMapOp) throws Exception {
-            return null;
-        }
-
-        @Override
-        public <TKEY, TVALUE> DS<TKEY, TVALUE> reduce(ReduceOp<KEY, VALUE, TKEY, TVALUE> reduceOp) throws Exception {
-            return null;
-        }
-
-        @Override
-        public HDFSLocation getLocation() {
-            return null;
-        }
-
-        @Override
-        public DS<KEY, VALUE> setOutputPath(Path path) {
-            return null;
-        }
-
-        @Override
-        public DS<KEY, VALUE> setOutputFormatCLass(Class<? extends OutputFormat> outputFormatCLass) {
-            return null;
-        }
-
-        @Override
-        public DS<KEY, VALUE> setNumReduceTasks(int numReduceTasks) {
-            return null;
-        }
-
-        @Override
-        public DS<KEY, VALUE> breakJobHere() {
-            return null;
-        }
-
-        @Override
-        public boolean isReady() {
-            return false;
-        }
-    }
 }

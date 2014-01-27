@@ -2,6 +2,8 @@ package doh2.api;
 
 import doh.api.TempPathManager;
 import doh.op.JobRunner;
+import doh.op.StringSerDe;
+import doh.op.serde.OpSerializer;
 import doh2.impl.DSExecutor;
 import doh2.impl.OnDemandDS;
 import doh2.impl.OpJobMaker;
@@ -17,17 +19,24 @@ public class DSContext {
     private final DSExecutor dsExecutor;
     private final JobRunner jobRunner;
 
+    private final OpSerializer opSerializer;
+
     public static final Class<? extends OutputFormat> DEFAULT_FORMAT_CLASS = SequenceFileOutputFormat.class;
 
     public DSContext(Configuration conf, JobRunner jobRunner, Path tempDir) {
         this.conf = conf;
         this.jobRunner = jobRunner;
         this.tempPathManager = new TempPathManager(tempDir);
-        this.dsExecutor = new DSExecutor(tempPathManager, conf, DEFAULT_FORMAT_CLASS, jobRunner, new OpJobMaker());
+        this.opSerializer = OpSerializer.create(conf, new StringSerDe.GsonStringSerDe());
+        this.dsExecutor = new DSExecutor(this);
     }
 
     public Configuration conf() {
         return conf;
+    }
+
+    public static Class<? extends OutputFormat> getDefaultFormatClass() {
+        return DEFAULT_FORMAT_CLASS;
     }
 
     public void execute(DS ... dses) throws Exception {
@@ -35,7 +44,8 @@ public class DSContext {
         for (int i = 0; i < dses.length; ++i) {
             DS ds = dses[i];
             if (! (ds instanceof OnDemandDS)) {
-                throw new IllegalArgumentException("Only OnDemandDS are supported, but got: " + ds.getClass().getName());
+                throw new IllegalArgumentException("Only OnDemandDS are supported, but got: " +
+                        ds.getClass().getName());
             }
             dsesOK[i] = (OnDemandDS) ds;
         }
@@ -43,4 +53,19 @@ public class DSContext {
     }
 
 
+    public TempPathManager getTempPathManager() {
+        return tempPathManager;
+    }
+
+    public DSExecutor getDsExecutor() {
+        return dsExecutor;
+    }
+
+    public JobRunner getJobRunner() {
+        return jobRunner;
+    }
+
+    public OpSerializer getOpSerializer() {
+        return opSerializer;
+    }
 }

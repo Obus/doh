@@ -7,7 +7,10 @@ import doh.ds.MapKVDS;
 import doh.op.kvop.CompositeReduceOp;
 import doh.op.serde.CompositeReduceOpJsonSerDe;
 import doh.op.serde.MapKVDataSetJsonSerDe;
+import doh.op.serde.OnDemandDSJsonSerDe;
 import doh.op.serde.OpSequenceJsonSerDe;
+import doh2.api.MapDS;
+import doh2.impl.OnDemandDS;
 import org.apache.mahout.common.Pair;
 
 import java.util.ArrayList;
@@ -44,6 +47,7 @@ public abstract class StringSerDe {
             defaultTypeAdapters = new ArrayList<Pair<Class, Object>>();
             defaultTypeAdapters.add(new Pair<Class, Object>(OpSequence.class, new OpSequenceJsonSerDe()));
             defaultTypeAdapters.add(new Pair<Class, Object>(MapKVDS.class, new MapKVDataSetJsonSerDe()));
+            defaultTypeAdapters.add(new Pair<Class, Object>(MapDS.class, new OnDemandDSJsonSerDe()));
             defaultTypeAdapters.add(new Pair<Class, Object>(CompositeReduceOp.class, new CompositeReduceOpJsonSerDe()));
         }
 

@@ -3,6 +3,7 @@ package doh2.impl;
 
 import doh.api.TempPathManager;
 import doh.op.JobRunner;
+import doh2.api.DSContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.OutputFormat;
 
@@ -15,32 +16,21 @@ public class DSExecutor {
 
     private final OpExecutor opExecutor;
 
-    public DSExecutor(TempPathManager tempPathManager, Configuration conf, Class<? extends OutputFormat> defaultOutputFormatClass, JobRunner jobRunner, OpJobMaker opJobMaker) {
-        this.opExecutor = new OpExecutor(tempPathManager, conf, defaultOutputFormatClass, jobRunner, opJobMaker);
+    public DSExecutor(DSContext dsContext) {
+        this.opExecutor = new OpExecutor(dsContext);
     }
 
     public void execute(OnDemandDS... dses) throws Exception {
-        Set<OnDemandDS> origins = new HashSet<OnDemandDS>();
+        List<OnDemandDS.ExecutionNode> targetNodes = new ArrayList<OnDemandDS.ExecutionNode>();
         for (OnDemandDS ds : dses) {
-            origins.add(findOrigin(ds));
-        }
-        List<OnDemandDS.ExecutionNode> rootNodes = new ArrayList<OnDemandDS.ExecutionNode>(origins.size());
-        for (OnDemandDS o : origins) {
-            rootNodes.add(o.node());
+            targetNodes.add(ds.node());
         }
 
-        ExecutionGraph executionGraph = new ExecutionGraph(rootNodes, opExecutor);
+        ExecutionGraph executionGraph = new ExecutionGraph(targetNodes, opExecutor);
         for (ExecutionUnit executionUnit : executionGraph.executionUnits()) {
             opExecutor.execute(executionUnit);
         }
     }
 
 
-    public OnDemandDS findOrigin(OnDemandDS ds) {
-        OnDemandDS ancestor = ds;
-        while (!ancestor.isReady()) {
-            ancestor = ancestor.parent();
-        }
-        return ancestor;
-    }
 }

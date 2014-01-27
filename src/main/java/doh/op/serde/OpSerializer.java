@@ -22,11 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public class OpSerializer {
-    private static final String FLAT_MAP_PARAM_NAME = "tmp.op.flatmap";
-    private static final String MAP_PARAM_NAME = "tmp.op.map";
-    private static final String COMPOSITE_MAP_PARAM_NAME = "tmp.op.composite.map";
-    private static final String REDUCE_PARAM_NAME = "tmp.op.reduce";
-    private static final String COMPOSITE_REDUCE_PARAM_NAME = "tmp.op.composite.reduce";
     private static final String MAPPER_OP = "tmp.op.mapper";
     private static final String REDUCER_OP = "tmp.op.reducer";
 

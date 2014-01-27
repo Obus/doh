@@ -17,6 +17,9 @@ public class DSDetails {
     public Integer numReducers;
 
     public Class<? extends InputFormat> inputFormatClass() {
+        if (formatClass == null) {
+            return null;
+        }
         if (formatClass.equals(SequenceFileOutputFormat.class)) {
             return SequenceFileInputFormat.class;
         }

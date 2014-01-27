@@ -31,47 +31,47 @@ import static org.junit.Assert.assertFalse;
 public class RealExample {
 
 
-    @Test
-    public void testExample() throws Exception {
-        RawUserStories rawUS = make();
-
-        RealKVDS<Consumer, Long> consumerPayments
-                = rawUS.flatMap(rawUserStoryToConsumerPayments());
-
-        MapKVDS<Consumer, Double> consumerPaymentsAvg
-                = consumerPayments.reduce(valuesAvg()).toMapKVDS();
-
-        RealKVDS<Consumer, Double> consumerPaymentsStd
-                = consumerPayments.reduce(valuesStd(consumerPaymentsAvg));
-
-
-        Iterator<KV<Consumer, Double>> cpIt = consumerPaymentsStd.iterator();
-        KV<Consumer, Double> kv;
-        kv = cpIt.next();
-        assertEquals(new Consumer("Elton"), kv.key);
-        assertEquals(74100.0, kv.value, 0.1);
-        kv = cpIt.next();
-        assertEquals(new Consumer("Emma"), kv.key);
-        assertEquals(55.57777333511022, kv.value, 0.1);
-        kv = cpIt.next();
-        assertEquals(new Consumer("Johny"), kv.key);
-        assertEquals(574.1785088280474, kv.value, 0.1);
-        assertFalse(cpIt.hasNext());
-
-
-        Iterator<KV<Consumer, Double>> cpaIt = consumerPaymentsAvg.iterator();
-        kv = cpaIt.next();
-        assertEquals(new Consumer("Elton"), kv.key);
-        assertEquals(75900.0, kv.value, 0.1);
-        kv = cpaIt.next();
-        assertEquals(new Consumer("Emma"), kv.key);
-        assertEquals(113.33333333333333, kv.value, 0.1);
-        kv = cpaIt.next();
-        assertEquals(new Consumer("Johny"), kv.key);
-        assertEquals(353.2, kv.value, 0.1);
-        assertFalse(cpaIt.hasNext());
-
-    }
+//    @Test
+//    public void testExample() throws Exception {
+//        RawUserStories rawUS = make();
+//
+//        RealKVDS<Consumer, Long> consumerPayments
+//                = rawUS.flatMap(rawUserStoryToConsumerPayments());
+//
+//        MapKVDS<Consumer, Double> consumerPaymentsAvg
+//                = consumerPayments.reduce(valuesAvg()).toMapKVDS();
+//
+//        RealKVDS<Consumer, Double> consumerPaymentsStd
+//                = consumerPayments.reduce(valuesStd(consumerPaymentsAvg));
+//
+//
+//        Iterator<KV<Consumer, Double>> cpIt = consumerPaymentsStd.iterator();
+//        KV<Consumer, Double> kv;
+//        kv = cpIt.next();
+//        assertEquals(new Consumer("Elton"), kv.key);
+//        assertEquals(74100.0, kv.value, 0.1);
+//        kv = cpIt.next();
+//        assertEquals(new Consumer("Emma"), kv.key);
+//        assertEquals(55.57777333511022, kv.value, 0.1);
+//        kv = cpIt.next();
+//        assertEquals(new Consumer("Johny"), kv.key);
+//        assertEquals(574.1785088280474, kv.value, 0.1);
+//        assertFalse(cpIt.hasNext());
+//
+//
+//        Iterator<KV<Consumer, Double>> cpaIt = consumerPaymentsAvg.iterator();
+//        kv = cpaIt.next();
+//        assertEquals(new Consumer("Elton"), kv.key);
+//        assertEquals(75900.0, kv.value, 0.1);
+//        kv = cpaIt.next();
+//        assertEquals(new Consumer("Emma"), kv.key);
+//        assertEquals(113.33333333333333, kv.value, 0.1);
+//        kv = cpaIt.next();
+//        assertEquals(new Consumer("Johny"), kv.key);
+//        assertEquals(353.2, kv.value, 0.1);
+//        assertFalse(cpaIt.hasNext());
+//
+//    }
 
     public static RawUserStories make() throws Exception {
         Path tempDir = new Path("tempDir");

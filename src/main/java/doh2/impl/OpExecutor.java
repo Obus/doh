@@ -7,6 +7,7 @@ import doh.op.JobRunner;
 import doh.op.kvop.CompositeMapOp;
 import doh.op.kvop.CompositeReduceOp;
 import doh.op.kvop.KVUnoOp;
+import doh2.api.DSContext;
 import doh2.api.HDFSLocation;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -21,18 +22,12 @@ import java.util.Queue;
 
 public class OpExecutor {
 
-    private final TempPathManager tempPathManager;
-    private final Configuration conf;
-    private final Class<? extends OutputFormat> defaultOutputFormatClass;
-    private final JobRunner jobRunner;
+    private final DSContext dsContext;
     private final OpJobMaker opJobMaker;
 
-    public OpExecutor(TempPathManager tempPathManager, Configuration conf, Class<? extends OutputFormat> defaultOutputFormatClass, JobRunner jobRunner, OpJobMaker opJobMaker) {
-        this.tempPathManager = tempPathManager;
-        this.conf = conf;
-        this.defaultOutputFormatClass = defaultOutputFormatClass;
-        this.jobRunner = jobRunner;
-        this.opJobMaker = opJobMaker;
+    public OpExecutor(DSContext dsContext) {
+        this.dsContext = dsContext;
+        this.opJobMaker = new OpJobMaker();
     }
 
     public void execute(ExecutionUnit executionUnit) throws Exception {
@@ -41,27 +36,34 @@ public class OpExecutor {
         final KVUnoOp mapTaskOp = compressMapOp(compositeOpSequence(opQueue));
         final KVUnoOp reduceTaskOp = compressReduceOp(reducerOp(opQueue), compositeOpSequence(opQueue));
 
-        final Job job = opJobMaker.makeJob(conf,
+        if (mapTaskOp != null) {
+            dsContext.getOpSerializer().saveMapperOp(dsContext.conf(), mapTaskOp);
+        }
+        if (reduceTaskOp != null) {
+            dsContext.getOpSerializer().saveReducerOp(dsContext.conf(), reduceTaskOp);
+        }
+
+        final Job job = opJobMaker.makeJob(dsContext.conf(),
                 executionUnit.input.getKeyClass(),
                 executionUnit.input.getValueClass(),
                 executionUnit.input.getLocation().getPaths(),
                 mapTaskOp, reduceTaskOp);
 
-        job.setInputFormatClass(executionUnit.input.details().inputFormatClass());
-
         specifyDatSetDetails(job, executionUnit.output.details());
 
-        jobRunner.runJob(job);
+        job.setInputFormatClass(executionUnit.input.details().inputFormatClass());
+
+        dsContext.getJobRunner().runJob(job);
 
         executionUnit.output.setReady();
     }
 
     private DSDetails specifyDatSetDetails(Job job, DSDetails details) {
         if (details.formatClass == null) {
-            details.formatClass = defaultOutputFormatClass;
+            details.formatClass = dsContext.getDefaultFormatClass();
         }
         if (singleLocationPath(details.location) == null) {
-            details.location = new HDFSLocation.SingleHDFSLocation(tempPathManager.getNextPath());
+            details.location = new HDFSLocation.SingleHDFSLocation(dsContext.getTempPathManager().getNextPath());
         }
 
         job.setOutputFormatClass(details.formatClass);
