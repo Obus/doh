@@ -1,6 +1,7 @@
 package doh2.impl.op;
 
 import doh2.api.OpParameter;
+import doh2.api.SingleHDFSLocation;
 import doh2.impl.serde.GsonStringSerDe;
 import doh2.api.op.FlatMapOp;
 import doh2.api.op.KV;
@@ -8,7 +9,6 @@ import doh2.api.op.MapOp;
 import doh2.api.op.ReduceOp;
 import doh2.impl.op.kvop.CompositeMapOp;
 import doh2.impl.op.kvop.CompositeReduceOp;
-import doh2.api.HDFSLocation;
 import doh2.api.MapDS;
 import doh2.impl.ondemand.OnDemandDS;
 import org.apache.hadoop.fs.Path;
@@ -59,11 +59,12 @@ public class GsonStringSerDeTest {
 
     @Test
     public void testSerializeSelf() throws Exception {
-
+        GsonStringSerDe gsonStringSerDe = new GsonStringSerDe();
+        assertTrue(StringSerDe.deserializeSerDe(gsonStringSerDe.serializeSelf()) instanceof GsonStringSerDe);
     }
 
     @Test
-    public void testSerialize() throws Exception {
+    public void testSerDe() throws Exception {
 
         FlatMapOpTestImpl1 flatMapOpTestImpl1 = new FlatMapOpTestImpl1();
         flatMapOpTestImpl1.aNotSerializedString = "not serialized";
@@ -71,7 +72,7 @@ public class GsonStringSerDeTest {
         CompositeMapOp compositeMapOp = new CompositeMapOp(Arrays.asList(new MapOpTestImpl1(), flatMapOpTestImpl1));
 
 
-        MapDS mapMock = new OnDemandDS(null, new HDFSLocation.SingleHDFSLocation(new Path("tempDir/map.map")));
+        MapDS mapMock = new OnDemandDS(null, new SingleHDFSLocation(new Path("tempDir/map.map")));
         ReduceOpTestImpl reduceOp = new ReduceOpTestImpl();
         reduceOp.aMap = mapMock;
         reduceOp.aDouble = 3.141592;
@@ -89,7 +90,7 @@ public class GsonStringSerDeTest {
         compositeReduceOp = gsonStringSerDe.deserialize(serialization);
 
         ReduceOpTestImpl reduceOpTest = (ReduceOpTestImpl) compositeReduceOp.getReduceOp();
-        assertEquals(new Path("tempDir/map.map"), ((HDFSLocation.SingleHDFSLocation) reduceOpTest.aMap.getLocation()).getPath());
+        assertEquals(new Path("tempDir/map.map"), ((SingleHDFSLocation) reduceOpTest.aMap.getLocation()).getPath());
         assertEquals(3.141592, reduceOpTest.aDouble, 0.0000001);
         assertEquals(314, reduceOp.aInteger);
         assertEquals(3141592l, reduceOp.aLong);
@@ -104,8 +105,4 @@ public class GsonStringSerDeTest {
  //       assertNull(flatMapOpTest.aNotSerializedString);
     }
 
-    @Test
-    public void testDeserialize() throws Exception {
-
-    }
 }

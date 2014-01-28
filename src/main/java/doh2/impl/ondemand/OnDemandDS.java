@@ -1,6 +1,7 @@
 package doh2.impl.ondemand;
 
 import com.google.common.collect.Lists;
+import doh2.api.SingleHDFSLocation;
 import doh2.impl.op.kvop.KVUnoOp;
 import doh2.impl.op.utils.HDFSUtils;
 import doh2.api.DS;
@@ -31,7 +32,7 @@ import static doh2.impl.op.WritableObjectDictionaryFactory.getObjectClass;
 public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE> {
 
     private transient final DSContext context;
-    private transient final ExecutionNode node;
+    private transient final DSExecutionNode node;
     private final DSDetails details = new DSDetails();
     private transient volatile boolean isReady;
 
@@ -39,20 +40,16 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE>
 
     private OnDemandDS(OnDemandDS parentDS, KVUnoOp parentOp) {
         this.context = parentDS.context;
-        this.node = new ExecutionNode(parentOp,
-                Lists.newArrayList(parentDS.node),
-                Lists.<ExecutionNode>newArrayList(), this);
+        this.node = new DSExecutionNode(parentOp, parentDS.node, this);
     }
 
 
     public OnDemandDS(DSContext context, HDFSLocation location) {
+        this.isReady = true;
         this.context = context;
-        this.node = new ExecutionNode(null,
-                Lists.<ExecutionNode>newArrayList(),
-                Lists.<ExecutionNode>newArrayList(), this);
+        this.node = new DSExecutionNode(null, this);
         this.details.location = location;
         this.details.formatClass = SequenceFileOutputFormat.class;
-        this.isReady = true;
     }
 
 
@@ -78,7 +75,7 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE>
         if (!getLocation().isSingle()) {
             throw new UnsupportedOperationException();
         }
-        Path path = ((HDFSLocation.SingleHDFSLocation) getLocation()).getPath();
+        Path path = ((SingleHDFSLocation) getLocation()).getPath();
         try {
             return new KeyValueIterator<KEY, VALUE>(
                     this.context.conf(),
@@ -154,7 +151,7 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE>
 
     @Override
     public OnDemandDS<KEY, VALUE> setOutputPath(Path path) {
-        this.details.location = new HDFSLocation.SingleHDFSLocation(path);
+        this.details.location = new SingleHDFSLocation(path);
         return this;
     }
 
@@ -182,12 +179,12 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE>
         return details;
     }
 
-    ExecutionNode node() {
+    DSExecutionNode node() {
         return node;
     }
 
     OnDemandDS parent() {
-        return node.incomeNodes().get(0).dataSet;
+        return node.incomeNode().dataSet;
     }
 
     Class<KEY> getKeyClass() throws IOException {
@@ -206,10 +203,10 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE>
 
     Class<?> getWritableValueClass() throws IOException {
         if (getLocation().isSingle()) {
-            Path path = ((HDFSLocation.SingleHDFSLocation) getLocation()).getPath();
+            Path path = ((SingleHDFSLocation) getLocation()).getPath();
             return valueClassOfDir(context.conf(), path);
         } else if (!getLocation().isSingle()) {
-            Path path = ((HDFSLocation.MultiHDFSLocation) getLocation()).getPaths()[0];
+            Path path = (getLocation()).getPaths()[0];
             return valueClassOfDir(context.conf(), path);
         }
         throw new UnsupportedOperationException();
@@ -217,10 +214,10 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE>
 
     Class<?> getWritableKeyClass() throws IOException {
         if (getLocation().isSingle()) {
-            Path path = ((HDFSLocation.SingleHDFSLocation) getLocation()).getPath();
+            Path path = ((SingleHDFSLocation) getLocation()).getPath();
             return keyClassOfDir(context.conf(), path);
         } else if (!getLocation().isSingle()) {
-            Path path = ((HDFSLocation.MultiHDFSLocation) getLocation()).getPaths()[0];
+            Path path = (getLocation()).getPaths()[0];
             return keyClassOfDir(context.conf(), path);
         }
         throw new UnsupportedOperationException();
@@ -245,7 +242,7 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE>
     }
 
 
-    private <TKEY, TVALUE> OnDemandDS<TKEY, TVALUE> applyUnoOp(KVUnoOp<KEY, VALUE, TKEY, TVALUE> kvUnoOp) throws Exception {
+    <TKEY, TVALUE> OnDemandDS<TKEY, TVALUE> applyUnoOp(KVUnoOp<KEY, VALUE, TKEY, TVALUE> kvUnoOp) throws Exception {
         OnDemandDS<TKEY, TVALUE> childDS = new OnDemandDS<TKEY, TVALUE>(this, kvUnoOp);
         node.outcomeNodes.add(childDS.node);
         return childDS;
@@ -260,26 +257,30 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE>
      *
      * @warning: No more than one income node is supported at the moment
      */
-    public static class ExecutionNode {
+    public static class DSExecutionNode implements ExecutionNode<DSExecutionNode> {
         private final KVUnoOp dsParentOp;
-        private final List<ExecutionNode> incomeNodes;
-        private final List<ExecutionNode> outcomeNodes;
+        private final DSExecutionNode incomeNode;
+        private final List<DSExecutionNode> outcomeNodes;
         private boolean sequenceBreak = false;
         private final OnDemandDS dataSet;
 
-        public ExecutionNode(KVUnoOp dsParentOp, List<ExecutionNode> incomeNodes, List<ExecutionNode> outcomeNodes, OnDemandDS dataSet) {
-            if (incomeNodes.size() > 1) {
-                throw new UnsupportedOperationException("Only one income node supported.");
-            }
+        public DSExecutionNode(KVUnoOp dsParentOp, DSExecutionNode incomeNode, OnDemandDS dataSet) {
             this.dsParentOp = dsParentOp;
-            this.incomeNodes = incomeNodes;
-            this.outcomeNodes = outcomeNodes;
+            this.incomeNode = incomeNode;
+            this.outcomeNodes = Lists.newArrayList();
             this.dataSet = dataSet;
         }
 
-        public boolean isSequenceBreak() {
-            return sequenceBreak;
+        public DSExecutionNode(KVUnoOp dsParentOp, OnDemandDS dataSet) {
+            this.dsParentOp = dsParentOp;
+            this.outcomeNodes = Lists.newArrayList();
+            this.dataSet = dataSet;
+            if (!this.dataSet.isReady()) {
+                throw new IllegalArgumentException("Data set doesn't have parent and not ready.");
+            }
+            this.incomeNode = null;
         }
+
 
         public OnDemandDS dataSet() {
             return dataSet;
@@ -289,12 +290,24 @@ public class OnDemandDS<KEY, VALUE> implements DS<KEY, VALUE>, MapDS<KEY, VALUE>
             return dsParentOp;
         }
 
-        public List<ExecutionNode> incomeNodes() {
-            return incomeNodes;
+        @Override
+        public DSExecutionNode incomeNode() {
+            return incomeNode;
         }
 
-        public List<ExecutionNode> outcomeNodes() {
+        @Override
+        public List<DSExecutionNode> outcomeNodes() {
             return outcomeNodes;
+        }
+
+        @Override
+        public boolean isDone() {
+            return dataSet().isReady();
+        }
+
+        @Override
+        public boolean isBreakHere() {
+            return sequenceBreak;
         }
     }
 

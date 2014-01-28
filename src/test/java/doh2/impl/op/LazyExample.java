@@ -57,10 +57,16 @@ public class LazyExample {
                 = lazyConsumerPayments.reduce(valuesStd(consumerPaymentsAvg));
 
         DS<Consumer, Double> lazyConsumerPaymentsStd1
-                = lazyConsumerPaymentsStd.map(new IdentityMapOp<Consumer, Double>());
+                = lazyConsumerPaymentsStd.map(new IdentityMapOp<Consumer, Double>()).breakJobHere();
+
+        DS<Consumer, Double> lazyConsumerPaymentsStd2
+                = lazyConsumerPaymentsStd1.map(new IdentityMapOp<Consumer, Double>());
+
+        DS<Consumer, Double> lazyConsumerPaymentsStd3
+                = lazyConsumerPaymentsStd2.map(new IdentityMapOp<Consumer, Double>());
 
 
-        Iterator<KV<Consumer, Double>> cpIt = lazyConsumerPaymentsStd1.iterator();
+        Iterator<KV<Consumer, Double>> cpIt = lazyConsumerPaymentsStd3.iterator();
         KV<Consumer, Double> kv;
         kv = cpIt.next();
         assertEquals(new Consumer("Elton"), kv.key);
@@ -73,10 +79,12 @@ public class LazyExample {
         assertEquals(574.1785088280474, kv.value, 0.1);
         assertFalse(cpIt.hasNext());
 
+        assertTrue(lazyConsumerPaymentsStd3.isReady());
+        assertFalse(lazyConsumerPaymentsStd2.isReady());
         assertTrue(lazyConsumerPaymentsStd1.isReady());
         assertFalse(lazyConsumerPaymentsStd.isReady());
         assertTrue(consumerPaymentsAvg.isReady());
-        assertTrue(lazyConsumerPayments.isReady());
+        assertFalse(lazyConsumerPayments.isReady());
         assertFalse(lazyRawUS2.isReady());
         assertFalse(lazyRawUS1.isReady());
 

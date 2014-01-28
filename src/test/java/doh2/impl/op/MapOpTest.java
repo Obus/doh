@@ -3,10 +3,8 @@ package doh2.impl.op;
 import doh2.api.DS;
 import doh2.api.DSContext;
 import doh2.api.OpParameter;
-import doh2.api.TempPathManager;
+import doh2.api.SingleHDFSLocation;
 import doh2.impl.ondemand.OnDemandDS;
-import doh2.impl.op.JobRunner;
-import doh2.api.HDFSLocation;
 import doh2.api.op.KV;
 import doh2.api.op.MapOp;
 import org.apache.hadoop.conf.Configuration;
@@ -125,13 +123,13 @@ public class MapOpTest {
 
         writer.close();
 
-        DS<Long, String> csv = new OnDemandDS<Long, String>(dsContext, new HDFSLocation.SingleHDFSLocation(input));
+        DS<Long, String> csv = new OnDemandDS<Long, String>(dsContext, new SingleHDFSLocation(input));
         DS<String, Integer> res = csv.
                 map(new SimpleParametrizedMapOp(3)).
                 execute();
 
         // Path resData = ;
-        Path path = ((HDFSLocation.SingleHDFSLocation) res.getLocation()).getPath();
+        Path path = ((SingleHDFSLocation) res.getLocation()).getPath();
         FileSystem fs = path.getFileSystem(conf);
         FileStatus[] statuses = fs.listStatus(path, new Utils.OutputFileUtils.OutputFilesFilter());
         assertEquals(1, statuses.length);

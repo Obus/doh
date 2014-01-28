@@ -3,7 +3,7 @@ package doh2.impl.serde;
 
 import com.google.gson.*;
 import doh2.api.DSContext;
-import doh2.api.HDFSLocation;
+import doh2.api.SingleHDFSLocation;
 import doh2.impl.ondemand.OnDemandDS;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -18,13 +18,13 @@ public class OnDemandDSJsonSerDe implements JsonSerializer<OnDemandDS>, JsonDese
     public OnDemandDS deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         Path path = new Path(json.getAsJsonPrimitive().getAsString());
         DSContext dsContext = new DSContext(conf, null, null);
-        OnDemandDS mkvds = new OnDemandDS(dsContext, new HDFSLocation.SingleHDFSLocation(path));
+        OnDemandDS mkvds = new OnDemandDS(dsContext, new SingleHDFSLocation(path));
         return mkvds;
     }
 
     @Override
     public JsonElement serialize(OnDemandDS src, Type typeOfSrc, JsonSerializationContext context) {
-        Path path = ((HDFSLocation.SingleHDFSLocation) src.getLocation()).getPath();
+        Path path = ((SingleHDFSLocation) src.getLocation()).getPath();
         return new JsonPrimitive(path.toString());
     }
 }

@@ -1,30 +1,33 @@
 package doh2.impl.ondemand;
 
-import doh2.impl.op.kvop.KVUnoOp;
-
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.Set;
 
-class ExecutionGraphIterator implements Iterator<ExecutionUnit> {
-    private final Queue<OnDemandDS.ExecutionNode> executionNodeQueue;
-    private final List<OnDemandDS.ExecutionNode> targetNodes;
+class ExecutionGraphIterator<Node extends ExecutionNode<Node>> implements Iterator<ExecutionUnit<Node>> {
+    private final Queue<Node> executionNodeQueue;
+    private final List<Node> targetNodes;
 
-    ExecutionGraphIterator(OnDemandDS.ExecutionNode rootNode, List<OnDemandDS.ExecutionNode> targetNodes) {
-        this.targetNodes = new ArrayList<OnDemandDS.ExecutionNode>();
-        for (OnDemandDS.ExecutionNode targetNode : targetNodes) {
-            if (!targetNode.dataSet().isReady()) {
+    ExecutionGraphIterator(List<Node> targetNodes) {
+        final Set<Node> rootNodes = new HashSet<Node>();
+        for (Node targetNode : targetNodes) {
+            rootNodes.add(findOrigin(targetNode));
+        }
+
+        this.targetNodes = new ArrayList<Node>();
+        for (Node targetNode : targetNodes) {
+            if (!targetNode.isDone()) {
                 this.targetNodes.add(targetNode);
             }
         }
-        this.executionNodeQueue = new LinkedList<OnDemandDS.ExecutionNode>();
-        for (OnDemandDS.ExecutionNode executionNode : rootNode.outcomeNodes()) {
-            if (!executionNode.dataSet().isReady() && isBranchContainsTargets(executionNode)) {
-                executionNodeQueue.add(executionNode);
-            }
+        this.executionNodeQueue = new LinkedList<Node>();
+        for (Node rootNode : rootNodes) {
+            updateNodeQueue(rootNode.outcomeNodes());
         }
     }
 
@@ -34,44 +37,79 @@ class ExecutionGraphIterator implements Iterator<ExecutionUnit> {
     }
 
     @Override
-    public ExecutionUnit next() {
+    public ExecutionUnit<Node> next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        OnDemandDS.ExecutionNode currentNode = executionNodeQueue.poll();
+        Node currentNode = executionNodeQueue.poll();
 
-        final List<OnDemandDS.ExecutionNode> nodeSequence = new ArrayList<OnDemandDS.ExecutionNode>();
+        final List<Node> nodeSequence = new ArrayList<Node>();
         nodeSequence.add(currentNode);
 
-        while (currentNode.outcomeNodes().size() == 1 && !targetNodes.contains(currentNode)) {
-            currentNode = currentNode.outcomeNodes().get(0);
+        while (!targetNodes.contains(currentNode) && !currentNode.isBreakHere()) {
+            List<Node> currentOutcomeNodes = targetFullNodes(currentNode.outcomeNodes());
+            if (currentOutcomeNodes.size() != 1) {
+                break;
+            }
+            currentNode = currentOutcomeNodes.get(0);
             nodeSequence.add(currentNode);
         }
 
-        for (OnDemandDS.ExecutionNode executionNode : currentNode.outcomeNodes()) {
-            if (!executionNode.dataSet().isReady() && isBranchContainsTargets(executionNode)) {
-                executionNodeQueue.add(executionNode);
-            }
-        }
-        return new ExecutionUnit(nodeSequence);
+        updateNodeQueue(currentNode.outcomeNodes());
+
+        return new ExecutionUnit<Node>(nodeSequence);
     }
 
-    private boolean isBranchContainsTargets(OnDemandDS.ExecutionNode executionNode) {
-        for (OnDemandDS.ExecutionNode target : targetNodes) {
+    private void updateNodeQueue(Iterable<Node> nodes) {
+        for (Node node : targetFullNodes(nodes)) {
+            executionNodeQueue.add(node);
+        }
+    }
+
+    private List<Node> targetFullNodes(Iterable<Node> nodes) {
+        List<Node> targetFullNodes = new ArrayList<Node>();
+        for (Node node : nodes) {
+            if (isBranchForTarget(node)) {
+                targetFullNodes.add(node);
+            }
+        }
+        return targetFullNodes;
+    }
+
+    private boolean isBranchForTarget(Node executionNode) {
+        for (Node target : targetNodes) {
             if (target.equals(executionNode)) {
                 return true;
             }
         }
-        for (OnDemandDS.ExecutionNode child : executionNode.outcomeNodes()) {
-            if (isBranchContainsTargets(child)) {
+        if (executionNode.isDone()) {
+            return false;
+        }
+        for (Node child : executionNode.outcomeNodes()) {
+            if (isBranchForTarget(child)) {
                 return true;
             }
         }
         return false;
     }
 
+
+
+
     @Override
     public void remove() {
         throw new UnsupportedOperationException();
+    }
+
+
+    public static <T extends ExecutionNode<T>> T findOrigin(T executionNode) {
+        T ancestorNode = executionNode;
+        while (!ancestorNode.isDone()) {
+            ancestorNode = ancestorNode.incomeNode();
+            if (ancestorNode == null) {
+                throw new IllegalArgumentException("No done ancestor node for node " + executionNode);
+            }
+        }
+        return ancestorNode;
     }
 }
