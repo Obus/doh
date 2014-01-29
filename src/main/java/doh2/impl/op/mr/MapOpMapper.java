@@ -14,8 +14,7 @@ import java.io.IOException;
 import static doh2.impl.op.WritableObjectDictionaryFactory.createDictionary;
 
 
-public class MapOpMapper
-        <
+public class MapOpMapper<
                 WRITABLE_FROM_KEY extends WritableComparable,
                 WRITABLE_FROM_VALUE extends Writable,
                 WRITABLE_TO_KEY extends WritableComparable,
@@ -40,10 +39,10 @@ public class MapOpMapper
             Configuration conf = context.getConfiguration();
             opSerializer = OpSerializer.create(conf);
             op = (MapOp) opSerializer.loadMapperOp(context.getConfiguration());
-            fromKeyDictionary = createDictionary(op.fromKeyClass());
-            fromValueDictionary = createDictionary(op.fromValueClass());
-            toKeyDictionary = createDictionary(op.toKeyClass());
-            toValueDictionary = createDictionary(op.toValueClass());
+            fromKeyDictionary = createDictionary(OpSerializer.loadMapInputKeyClassFromConf(conf));
+            fromValueDictionary = createDictionary(OpSerializer.loadMapInputValueClassFromConf(conf));
+            toKeyDictionary = createDictionary(OpSerializer.loadMapOutputKeyClassFromConf(conf));
+            toValueDictionary = createDictionary(OpSerializer.loadMapOutputValueClassFromConf(conf));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

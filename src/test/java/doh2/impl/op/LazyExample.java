@@ -5,9 +5,7 @@ import com.synqera.bigkore.model.fact.Consumer;
 import com.synqera.bigkore.model.fact.Payment;
 import com.synqera.bigkore.model.fact.Product;
 import com.synqera.bigkore.model.fact.Time;
-import doh2.impl.op.JobRunner;
 import doh2.api.op.KV;
-import doh2.api.op.MapOp;
 import doh2.api.DS;
 import doh2.api.DSContext;
 import doh2.api.DSFactory;
@@ -34,18 +32,11 @@ import static org.junit.Assert.assertTrue;
 public class LazyExample {
 
 
-    public static class IdentityMapOp<FK, FV> extends MapOp<FK, FV, FK, FV> {
-        @Override
-        public KV<FK, FV> map(FK fk, FV fv) {
-            return keyValue(fk, fv);
-        }
-    }
-
     @Test
     public void testOnDemandDS() throws Exception {
         DS<BytesWritable, String> rawUS = make();
-        DS<BytesWritable, String> lazyRawUS1 = rawUS.map(new IdentityMapOp<BytesWritable, String>());
-        DS<BytesWritable, String> lazyRawUS2 = lazyRawUS1.map(new IdentityMapOp<BytesWritable, String>());
+        DS<BytesWritable, String> lazyRawUS1 = rawUS.map(new TestOps.IdentityMapOp<BytesWritable, String>());
+        DS<BytesWritable, String> lazyRawUS2 = lazyRawUS1.map(new TestOps.IdentityMapOp<BytesWritable, String>());
 
         DS<Consumer, Long> lazyConsumerPayments
                 = lazyRawUS2.flatMap(rawUserStoryToConsumerPayments());
@@ -57,13 +48,13 @@ public class LazyExample {
                 = lazyConsumerPayments.reduce(valuesStd(consumerPaymentsAvg));
 
         DS<Consumer, Double> lazyConsumerPaymentsStd1
-                = lazyConsumerPaymentsStd.map(new IdentityMapOp<Consumer, Double>()).breakJobHere();
+                = lazyConsumerPaymentsStd.map(new TestOps.IdentityMapOp<Consumer, Double>()).breakJobHere();
 
         DS<Consumer, Double> lazyConsumerPaymentsStd2
-                = lazyConsumerPaymentsStd1.map(new IdentityMapOp<Consumer, Double>());
+                = lazyConsumerPaymentsStd1.map(new TestOps.IdentityMapOp<Consumer, Double>());
 
         DS<Consumer, Double> lazyConsumerPaymentsStd3
-                = lazyConsumerPaymentsStd2.map(new IdentityMapOp<Consumer, Double>());
+                = lazyConsumerPaymentsStd2.map(new TestOps.IdentityMapOp<Consumer, Double>());
 
 
         Iterator<KV<Consumer, Double>> cpIt = lazyConsumerPaymentsStd3.iterator();
@@ -231,64 +222,5 @@ public class LazyExample {
 
         return rawUserStories;
     }
-
-//    @Test
-//    public void testLazy() throws Exception {
-//        RawUserStories rawUS = RealExample.make();
-//        LazyKVDS<BytesWritable, String> lazyRawUS = new LazyKVDS<BytesWritable, String>(rawUS.getContext(), rawUS);
-//        LazyKVDS<BytesWritable, String> lazyRawUS1 = lazyRawUS.map(new IdentityMapOp<BytesWritable, String>());
-//        LazyKVDS<BytesWritable, String> lazyRawUS2 = lazyRawUS1.map(new IdentityMapOp<BytesWritable, String>());
-//
-//        LazyKVDS<Consumer, Long> lazyConsumerPayments
-//                = lazyRawUS2.flatMap(rawUserStoryToConsumerPayments());
-//
-//        MapKVDS<Consumer, Double> consumerPaymentsAvg
-//                = lazyConsumerPayments.reduce(valuesAvg()).toMapKVDS();
-//
-//        LazyKVDS<Consumer, Double> lazyConsumerPaymentsStd
-//                = lazyConsumerPayments.reduce(valuesStd(consumerPaymentsAvg));
-//
-//        LazyKVDS<Consumer, Double> lazyConsumerPaymentsStd1
-//                = lazyConsumerPaymentsStd.map(new IdentityMapOp<Consumer, Double>());
-//
-//
-//        Iterator<KV<Consumer, Double>> cpIt = lazyConsumerPaymentsStd1.iterator();
-//        KV<Consumer, Double> kv;
-//        kv = cpIt.next();
-//        assertEquals(new Consumer("Elton"), kv.key);
-//        assertEquals(74100.0, kv.value, 0.1);
-//        kv = cpIt.next();
-//        assertEquals(new Consumer("Emma"), kv.key);
-//        assertEquals(55.57777333511022, kv.value, 0.1);
-//        kv = cpIt.next();
-//        assertEquals(new Consumer("Johny"), kv.key);
-//        assertEquals(574.1785088280474, kv.value, 0.1);
-//        assertFalse(cpIt.hasNext());
-//
-//        assertTrue(lazyConsumerPaymentsStd1.isReady());
-//        assertFalse(lazyConsumerPaymentsStd.isReady());
-//        assertTrue(consumerPaymentsAvg.isReady());
-//        assertFalse(lazyConsumerPayments.isReady());
-//        assertFalse(lazyRawUS2.isReady());
-//        assertFalse(lazyRawUS1.isReady());
-//        assertTrue(lazyRawUS.isReady());
-//
-//        Iterator<KV<Consumer, Double>> cpaIt = consumerPaymentsAvg.iterator();
-//        kv = cpaIt.next();
-//        assertEquals(new Consumer("Elton"), kv.key);
-//        assertEquals(75900.0, kv.value, 0.1);
-//        kv = cpaIt.next();
-//        assertEquals(new Consumer("Emma"), kv.key);
-//        assertEquals(113.33333333333333, kv.value, 0.1);
-//        kv = cpaIt.next();
-//        assertEquals(new Consumer("Johny"), kv.key);
-//        assertEquals(353.2, kv.value, 0.1);
-//        assertFalse(cpaIt.hasNext());
-//
-//
-//    }
-//
-
-
 
 }

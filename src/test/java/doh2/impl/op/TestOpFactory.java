@@ -4,16 +4,16 @@ import com.synqera.bigkore.model.fact.Consumer;
 import doh2.api.MapDS;
 
 public class TestOpFactory {
-    public static RawUSToConsumerPaymentsOp rawUserStoryToConsumerPayments() {
-        return new RawUSToConsumerPaymentsOp();
+    public static TestOps.RawUSToConsumerPaymentsOp rawUserStoryToConsumerPayments() {
+        return new TestOps.RawUSToConsumerPaymentsOp();
     }
 
-    public static ValueAvgOp.ConsumerValuesAvgOp valuesAvg() {
-        return new ValueAvgOp.ConsumerValuesAvgOp();
+    public static TestOps.ValueAvgOp.ConsumerValuesAvgOp valuesAvg() {
+        return new TestOps.ValueAvgOp.ConsumerValuesAvgOp();
     }
 
-    public static ValueStdOp.ConsumerValuesStdOp valuesStd(MapDS<Consumer, Double> keysAvg) {
-        ValueStdOp.ConsumerValuesStdOp op = new ValueStdOp.ConsumerValuesStdOp();
+    public static TestOps.ValueStdOp.ConsumerValuesStdOp valuesStd(MapDS<Consumer, Double> keysAvg) {
+        TestOps.ValueStdOp.ConsumerValuesStdOp op = new TestOps.ValueStdOp.ConsumerValuesStdOp();
         op.keysAvg = keysAvg;
         return op;
     }

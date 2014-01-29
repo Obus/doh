@@ -5,6 +5,7 @@ import doh2.api.op.FilterOp;
 import doh2.api.op.FlatMapOp;
 import doh2.api.op.MapOp;
 import doh2.api.op.ReduceOp;
+import doh2.impl.op.kvop.KVUnoOp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,16 +41,16 @@ public class ReflectionUtils {
 
     public static Class getOpAncestor(Class clazz) {
         if (MapOp.class.isAssignableFrom(clazz)) {
-            return MapOp.class;
+            return KVUnoOp.class;
         }
         if (FlatMapOp.class.isAssignableFrom(clazz)) {
-            return FlatMapOp.class;
+            return KVUnoOp.class;
         }
         if (ReduceOp.class.isAssignableFrom(clazz)) {
             return ReduceOp.class;
         }
         else if (FilterOp.class.isAssignableFrom(clazz)) {
-            return FilterOp.class;
+            return KVUnoOp.class;
         }
         throw new IllegalArgumentException("Unknown operation class: " + clazz);
     }

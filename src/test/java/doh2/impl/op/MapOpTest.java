@@ -125,8 +125,7 @@ public class MapOpTest {
 
         DS<Long, String> csv = new OnDemandDS<Long, String>(dsContext, new SingleHDFSLocation(input));
         DS<String, Integer> res = csv.
-                map(new SimpleParametrizedMapOp(3)).
-                execute();
+                map(new SimpleParametrizedMapOp(3));
 
         // Path resData = ;
         Path path = ((SingleHDFSLocation) res.getLocation()).getPath();

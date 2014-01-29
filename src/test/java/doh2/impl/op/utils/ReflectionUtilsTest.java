@@ -6,6 +6,7 @@ import doh2.api.op.KV;
 import doh2.api.op.MapOp;
 import doh2.api.op.ReduceOp;
 import doh2.impl.op.Op;
+import doh2.impl.op.kvop.KVUnoOp;
 import org.junit.Test;
 
 import static doh2.impl.op.utils.ReflectionUtils.*;
@@ -47,9 +48,9 @@ public class ReflectionUtilsTest {
     @Test
     public void testGetOpAncestor() throws Exception {
         assertEquals(ReduceOp.class, getOpAncestor(ReduceImplOp.class));
-        assertEquals(MapOp.class, getOpAncestor(MapImplOp.class));
-        assertEquals(FlatMapOp.class, getOpAncestor(FlatMapImplOp.class));
-        assertEquals(FilterOp.class, getOpAncestor(FilterImplOp.class));
+        assertEquals(KVUnoOp.class, getOpAncestor(MapImplOp.class));
+        assertEquals(KVUnoOp.class, getOpAncestor(FlatMapImplOp.class));
+        assertEquals(KVUnoOp.class, getOpAncestor(FilterImplOp.class));
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -26,9 +26,6 @@ public class WritableObjectDictionaryFactory {
     }
 
     public static <O, W extends Writable> WritableObjectDictionary<O, W> createDictionary(Class clazz) {
-        if (Writable.class.isAssignableFrom(clazz)) {
-            return (WritableObjectDictionary<O, W>) new IdentityWOD<W>();
-        }
         if (Integer.class.isAssignableFrom(clazz)) {
             return (WritableObjectDictionary<O, W>) new IntegerWOD();
         }
@@ -40,6 +37,9 @@ public class WritableObjectDictionaryFactory {
         }
         if (String.class.isAssignableFrom(clazz)) {
             return (WritableObjectDictionary<O, W>) new StringWOD();
+        }
+        if (Writable.class.isAssignableFrom(clazz)) {
+            return (WritableObjectDictionary<O, W>) new IdentityWOD<W>();
         }
 
         throw new UnsupportedOperationException("Unknown class: " + clazz);
@@ -133,6 +133,9 @@ public class WritableObjectDictionaryFactory {
     }
 
     public static Class getObjectClass(Class<? extends Writable> writableClass) {
+        if (writableClass.equals(LongWritable.class)) {
+            return Long.class;
+        }
         if (writableClass.equals(IntWritable.class)) {
             return Integer.class;
         }

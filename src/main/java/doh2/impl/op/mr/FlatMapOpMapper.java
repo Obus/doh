@@ -40,10 +40,10 @@ public class FlatMapOpMapper
             Configuration conf = context.getConfiguration();
             opSerializer = OpSerializer.create(conf);
             op = (FlatMapOp) opSerializer.loadMapperOp(context.getConfiguration());
-            fromKeyDictionary = createDictionary(op.fromKeyClass());
-            fromValueDictionary = createDictionary(op.fromValueClass());
-            toKeyDictionary = createDictionary(op.toKeyClass());
-            toValueDictionary = createDictionary(op.toValueClass());
+            fromKeyDictionary = createDictionary(OpSerializer.loadMapInputKeyClassFromConf(conf));
+            fromValueDictionary = createDictionary(OpSerializer.loadMapInputValueClassFromConf(conf));
+            toKeyDictionary = createDictionary(OpSerializer.loadMapOutputKeyClassFromConf(conf));
+            toValueDictionary = createDictionary(OpSerializer.loadMapOutputValueClassFromConf(conf));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

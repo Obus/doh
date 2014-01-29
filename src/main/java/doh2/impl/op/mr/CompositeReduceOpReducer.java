@@ -42,10 +42,10 @@ public class CompositeReduceOpReducer
             Configuration conf = context.getConfiguration();
             opSerializer = OpSerializer.create(conf);
             op = (CompositeReduceOp) opSerializer.loadReducerOp(context.getConfiguration());
-            fromKeyDictionary = createDictionary(op.fromKeyClass());
-            fromValueDictionary = createDictionary(op.fromValueClass());
-            toKeyDictionary = createDictionary(op.toKeyClass());
-            toValueDictionary = createDictionary(op.toValueClass());
+            fromKeyDictionary = createDictionary(OpSerializer.loadMapOutputKeyClassFromConf(conf));
+            fromValueDictionary = createDictionary(OpSerializer.loadMapOutputValueClassFromConf(conf));
+            toKeyDictionary = createDictionary(OpSerializer.loadReduceOutputKeyClassFromConf(conf));
+            toValueDictionary = createDictionary(OpSerializer.loadReduceOutputValueClassFromConf(conf));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

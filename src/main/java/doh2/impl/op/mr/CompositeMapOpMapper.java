@@ -42,10 +42,10 @@ public class CompositeMapOpMapper<
             Configuration conf = context.getConfiguration();
             opSerializer = OpSerializer.create(conf);
             op = (CompositeMapOp) opSerializer.loadMapperOp(conf);
-            fromKeyDictionary = createDictionary(opSerializer.loadMapInputKeyClassFromConf(conf));
-            fromValueDictionary = createDictionary(opSerializer.loadMapInputValueClassFromConf(conf));
-            toKeyDictionary = createDictionary(opSerializer.loadMapOutputKeyClassFromConf(conf));
-            toValueDictionary = createDictionary(opSerializer.loadMapOutputValueClassFromConf(conf));
+            fromKeyDictionary = createDictionary(OpSerializer.loadMapInputKeyClassFromConf(conf));
+            fromValueDictionary = createDictionary(OpSerializer.loadMapInputValueClassFromConf(conf));
+            toKeyDictionary = createDictionary(OpSerializer.loadMapOutputKeyClassFromConf(conf));
+            toValueDictionary = createDictionary(OpSerializer.loadMapOutputValueClassFromConf(conf));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
