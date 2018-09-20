@@ -1,6 +1,3 @@
-DOH — I don't know what does it mean.
-================================
-
 Intro
 -------------------------
 This framework based on two main concepts: 
